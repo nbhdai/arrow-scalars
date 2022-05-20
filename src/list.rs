@@ -1034,10 +1034,10 @@ pub mod tests {
     use std::ops::Deref;
 
     use super::*;
-    use crate::table_scalar::table_list::{BooleanList, Float16List, Utf8List};
+    use crate::table_scalar::table_list::Float16List;
 
-    macro_rules! primitive_list_ingestor_test {
-        ($func_name:ident, $prim_type:ident, $array_type:ty, $values_type:ident, $list_type:ident, $values:expr, $intended_values:expr, $set:expr) => {
+    macro_rules! primitive_list_test {
+        ($func_name:ident, $prim_type:expr, $array_type:ty, $values_type:ident, $list_type:ident, $values:expr, $intended_values:expr, $set:expr) => {
             #[test]
             fn $func_name() {
                 let values = $values;
@@ -1050,10 +1050,7 @@ pub mod tests {
                     })),
                 };
                 assert_eq!(intended_list, list);
-                assert_eq!(
-                    as_primitive_array::<$prim_type>(&list.to_array()),
-                    array.deref()
-                );
+                assert_eq!($prim_type(&list.to_array()), array.deref());
             }
         };
     }
@@ -1083,9 +1080,9 @@ pub mod tests {
             }
         };
     }
-    primitive_list_ingestor_test!(
-        test_primitive_int8_list_nulless,
-        Int8Type,
+    primitive_list_test!(
+        test_int8_list_nulless,
+        as_primitive_array::<Int8Type>,
         Int8Array,
         Int8,
         Int8List,
@@ -1093,9 +1090,9 @@ pub mod tests {
         vec![1, 2, 5, 3, 4],
         vec![true, true, true, true, true]
     );
-    primitive_list_ingestor_test!(
-        test_primitive_int8_list,
-        Int8Type,
+    primitive_list_test!(
+        test_int8_list,
+        as_primitive_array::<Int8Type>,
         Int8Array,
         Int8,
         Int8List,
@@ -1103,9 +1100,9 @@ pub mod tests {
         vec![1, 2, 0, 3, 4],
         vec![true, true, false, true, true]
     );
-    primitive_list_ingestor_test!(
-        test_primitive_int16_list_nulless,
-        Int16Type,
+    primitive_list_test!(
+        test_int16_list_nulless,
+        as_primitive_array::<Int16Type>,
         Int16Array,
         Int16,
         Int16List,
@@ -1113,9 +1110,9 @@ pub mod tests {
         vec![1, 2, 5, 3, 4],
         vec![true, true, true, true, true]
     );
-    primitive_list_ingestor_test!(
-        test_primitive_int16_list,
-        Int16Type,
+    primitive_list_test!(
+        test_int16_list,
+        as_primitive_array::<Int16Type>,
         Int16Array,
         Int16,
         Int16List,
@@ -1123,9 +1120,9 @@ pub mod tests {
         vec![1, 2, 0, 3, 4],
         vec![true, true, false, true, true]
     );
-    primitive_list_ingestor_test!(
-        test_primitive_int32_list_nulless,
-        Int32Type,
+    primitive_list_test!(
+        test_int32_list_nulless,
+        as_primitive_array::<Int32Type>,
         Int32Array,
         Int32,
         Int32List,
@@ -1133,9 +1130,9 @@ pub mod tests {
         vec![1, 2, 5, 3, 4],
         vec![true, true, true, true, true]
     );
-    primitive_list_ingestor_test!(
-        test_primitive_int32_list,
-        Int32Type,
+    primitive_list_test!(
+        test_int32_list,
+        as_primitive_array::<Int32Type>,
         Int32Array,
         Int32,
         Int32List,
@@ -1143,9 +1140,9 @@ pub mod tests {
         vec![1, 2, 0, 3, 4],
         vec![true, true, false, true, true]
     );
-    primitive_list_ingestor_test!(
-        test_primitive_int64_list_nulless,
-        Int64Type,
+    primitive_list_test!(
+        test_int64_list_nulless,
+        as_primitive_array::<Int64Type>,
         Int64Array,
         Int64,
         Int64List,
@@ -1153,9 +1150,9 @@ pub mod tests {
         vec![1, 2, 5, 3, 4],
         vec![true, true, true, true, true]
     );
-    primitive_list_ingestor_test!(
-        test_primitive_int64_list,
-        Int64Type,
+    primitive_list_test!(
+        test_int64_list,
+        as_primitive_array::<Int64Type>,
         Int64Array,
         Int64,
         Int64List,
@@ -1164,9 +1161,9 @@ pub mod tests {
         vec![true, true, false, true, true]
     );
 
-    primitive_list_ingestor_test!(
-        test_primitive_uint8_list_nulless,
-        UInt8Type,
+    primitive_list_test!(
+        test_uint8_list_nulless,
+        as_primitive_array::<UInt8Type>,
         UInt8Array,
         Uint8,
         UInt8List,
@@ -1174,9 +1171,9 @@ pub mod tests {
         vec![1, 2, 5, 3, 4],
         vec![true, true, true, true, true]
     );
-    primitive_list_ingestor_test!(
-        test_primitive_uint8_list,
-        UInt8Type,
+    primitive_list_test!(
+        test_uint8_list,
+        as_primitive_array::<UInt8Type>,
         UInt8Array,
         Uint8,
         UInt8List,
@@ -1184,9 +1181,9 @@ pub mod tests {
         vec![1, 2, 0, 3, 4],
         vec![true, true, false, true, true]
     );
-    primitive_list_ingestor_test!(
-        test_primitive_uint16_list_nulless,
-        UInt16Type,
+    primitive_list_test!(
+        test_uint16_list_nulless,
+        as_primitive_array::<UInt16Type>,
         UInt16Array,
         Uint16,
         UInt16List,
@@ -1194,9 +1191,9 @@ pub mod tests {
         vec![1, 2, 5, 3, 4],
         vec![true, true, true, true, true]
     );
-    primitive_list_ingestor_test!(
-        test_primitive_uint16_list,
-        UInt16Type,
+    primitive_list_test!(
+        test_uint16_list,
+        as_primitive_array::<UInt16Type>,
         UInt16Array,
         Uint16,
         UInt16List,
@@ -1204,9 +1201,9 @@ pub mod tests {
         vec![1, 2, 0, 3, 4],
         vec![true, true, false, true, true]
     );
-    primitive_list_ingestor_test!(
-        test_primitive_uint32_list_nulless,
-        UInt32Type,
+    primitive_list_test!(
+        test_uint32_list_nulless,
+        as_primitive_array::<UInt32Type>,
         UInt32Array,
         Uint32,
         UInt32List,
@@ -1214,9 +1211,9 @@ pub mod tests {
         vec![1, 2, 5, 3, 4],
         vec![true, true, true, true, true]
     );
-    primitive_list_ingestor_test!(
-        test_primitive_uint32_list,
-        UInt32Type,
+    primitive_list_test!(
+        test_uint32_list,
+        as_primitive_array::<UInt32Type>,
         UInt32Array,
         Uint32,
         UInt32List,
@@ -1224,9 +1221,9 @@ pub mod tests {
         vec![1, 2, 0, 3, 4],
         vec![true, true, false, true, true]
     );
-    primitive_list_ingestor_test!(
-        test_primitive_uint64_list_nulless,
-        UInt64Type,
+    primitive_list_test!(
+        test_uint64_list_nulless,
+        as_primitive_array::<UInt64Type>,
         UInt64Array,
         Uint64,
         UInt64List,
@@ -1234,9 +1231,9 @@ pub mod tests {
         vec![1, 2, 5, 3, 4],
         vec![true, true, true, true, true]
     );
-    primitive_list_ingestor_test!(
-        test_primitive_uint64_list,
-        UInt64Type,
+    primitive_list_test!(
+        test_uint64_list,
+        as_primitive_array::<UInt64Type>,
         UInt64Array,
         Uint64,
         UInt64List,
@@ -1244,9 +1241,9 @@ pub mod tests {
         vec![1, 2, 0, 3, 4],
         vec![true, true, false, true, true]
     );
-    primitive_list_ingestor_test!(
-        test_primitive_float32_list_nulless,
-        Float32Type,
+    primitive_list_test!(
+        test_float32_list_nulless,
+        as_primitive_array::<Float32Type>,
         Float32Array,
         Float32,
         Float32List,
@@ -1254,9 +1251,9 @@ pub mod tests {
         vec![1.0, 2.0, 5.0, 3.0, 4.0],
         vec![true, true, true, true, true]
     );
-    primitive_list_ingestor_test!(
-        test_primitive_float32_list,
-        Float32Type,
+    primitive_list_test!(
+        test_float32_list,
+        as_primitive_array::<Float32Type>,
         Float32Array,
         Float32,
         Float32List,
@@ -1264,9 +1261,9 @@ pub mod tests {
         vec![1.0, 2.0, 0.0, 3.0, 4.0],
         vec![true, true, false, true, true]
     );
-    primitive_list_ingestor_test!(
-        test_primitive_float64_list_nulless,
-        Float64Type,
+    primitive_list_test!(
+        test_float64_list_nulless,
+        as_primitive_array::<Float64Type>,
         Float64Array,
         Float64,
         Float64List,
@@ -1274,19 +1271,104 @@ pub mod tests {
         vec![1.0, 2.0, 5.0, 3.0, 4.0],
         vec![true, true, true, true, true]
     );
-    primitive_list_ingestor_test!(
-        test_primitive_float64_list,
-        Float64Type,
+    primitive_list_test!(
+        test_float64_list,
+        as_primitive_array::<Float64Type>,
         Float64Array,
         Float64,
         Float64List,
         vec![Some(1.0), Some(2.0), None, Some(3.0), Some(4.0)],
         vec![1.0, 2.0, 0.0, 3.0, 4.0],
+        vec![true, true, false, true, true]
+    );
+    primitive_list_test!(
+        test_utf8_list_nulless,
+        as_string_array,
+        StringArray,
+        Utf8,
+        Utf8List,
+        vec!["1.0", "2.0", "5.0", "3.0", "4.0"],
+        vec![
+            "1.0".to_string(),
+            "2.0".to_string(),
+            "5.0".to_string(),
+            "3.0".to_string(),
+            "4.0".to_string(),
+        ],
+        vec![true, true, true, true, true]
+    );
+    primitive_list_test!(
+        test_utf8_list,
+        as_string_array,
+        StringArray,
+        Utf8,
+        Utf8List,
+        vec![Some("1.0"), Some("2.0"), None, Some("3.0"), Some("4.0")],
+        vec![
+            "1.0".to_string(),
+            "2.0".to_string(),
+            String::new(),
+            "3.0".to_string(),
+            "4.0".to_string(),
+        ],
+        vec![true, true, false, true, true]
+    );
+    primitive_list_test!(
+        test_large_utf8_list_nulless,
+        as_largestring_array,
+        LargeStringArray,
+        LargeUtf8,
+        Utf8List,
+        vec!["1.0", "2.0", "5.0", "3.0", "4.0"],
+        vec![
+            "1.0".to_string(),
+            "2.0".to_string(),
+            "5.0".to_string(),
+            "3.0".to_string(),
+            "4.0".to_string(),
+        ],
+        vec![true, true, true, true, true]
+    );
+    primitive_list_test!(
+        test_large_utf8_list,
+        as_largestring_array,
+        LargeStringArray,
+        LargeUtf8,
+        Utf8List,
+        vec![Some("1.0"), Some("2.0"), None, Some("3.0"), Some("4.0")],
+        vec![
+            "1.0".to_string(),
+            "2.0".to_string(),
+            String::new(),
+            "3.0".to_string(),
+            "4.0".to_string(),
+        ],
+        vec![true, true, false, true, true]
+    );
+
+    primitive_list_test!(
+        test_bool_list_nulless,
+        as_boolean_array,
+        BooleanArray,
+        Boolean,
+        BooleanList,
+        vec![true, false, true, true, false],
+        vec![true, false, true, true, false],
+        vec![true, true, true, true, true]
+    );
+    primitive_list_test!(
+        test_bool_list,
+        as_boolean_array,
+        BooleanArray,
+        Boolean,
+        BooleanList,
+        vec![Some(true), Some(false), None, Some(true), Some(false)],
+        vec![true, false, false, true, false],
         vec![true, true, false, true, true]
     );
 
     primitive_list_push_test!(
-        test_primitive_int8_list_push,
+        test_int8_list_push,
         Int8Type,
         Int8Array,
         Int8,
@@ -1297,7 +1379,7 @@ pub mod tests {
         4
     );
     primitive_list_push_test!(
-        test_primitive_int16_list_push,
+        test_int16_list_push,
         Int16Type,
         Int16Array,
         Int16,
@@ -1308,7 +1390,7 @@ pub mod tests {
         4
     );
     primitive_list_push_test!(
-        test_primitive_int32_list_push,
+        test_int32_list_push,
         Int32Type,
         Int32Array,
         Int32,
@@ -1319,7 +1401,7 @@ pub mod tests {
         4
     );
     primitive_list_push_test!(
-        test_primitive_int64_list_push,
+        test_int64_list_push,
         Int64Type,
         Int64Array,
         Int64,
@@ -1330,7 +1412,7 @@ pub mod tests {
         4
     );
     primitive_list_push_test!(
-        test_primitive_uint8_list_push,
+        test_uint8_list_push,
         UInt8Type,
         UInt8Array,
         Uint8,
@@ -1341,7 +1423,7 @@ pub mod tests {
         4
     );
     primitive_list_push_test!(
-        test_primitive_uint16_list_push,
+        test_uint16_list_push,
         UInt16Type,
         UInt16Array,
         Uint16,
@@ -1352,7 +1434,7 @@ pub mod tests {
         4
     );
     primitive_list_push_test!(
-        test_primitive_uint32_list_push,
+        test_uint32_list_push,
         UInt32Type,
         UInt32Array,
         Uint32,
@@ -1363,7 +1445,7 @@ pub mod tests {
         4
     );
     primitive_list_push_test!(
-        test_primitive_uint64_list_push,
+        test_uint64_list_push,
         UInt64Type,
         UInt64Array,
         Uint64,
@@ -1374,7 +1456,7 @@ pub mod tests {
         4
     );
     primitive_list_push_test!(
-        test_primitive_float32_list_push,
+        test_float32_list_push,
         Float32Type,
         Float32Array,
         Float32,
@@ -1385,7 +1467,7 @@ pub mod tests {
         4.0
     );
     primitive_list_push_test!(
-        test_primitive_float64_list_push,
+        test_float64_list_push,
         Float64Type,
         Float64Array,
         Float64,
@@ -1397,37 +1479,7 @@ pub mod tests {
     );
 
     #[test]
-    fn test_bool_list() {
-        let values = vec![Some(true), Some(false), None, Some(true), Some(false)];
-        let array = Arc::new(BooleanArray::from(values));
-        let list = array.into_list();
-        let intended_list = TableList {
-            values: Some(table_list::Values::Boolean(BooleanList {
-                values: vec![true, false, false, true, false],
-                set: vec![true, true, false, true, true],
-            })),
-        };
-        assert_eq!(intended_list, list);
-        assert_eq!(as_boolean_array(&list.to_array()), array.deref());
-    }
-
-    #[test]
-    fn test_bool_list_nulless() {
-        let values = vec![true, false, true, true, false];
-        let array = Arc::new(BooleanArray::from(values));
-        let list = array.into_list();
-        let intended_list = TableList {
-            values: Some(table_list::Values::Boolean(BooleanList {
-                values: vec![true, false, true, true, false],
-                set: vec![true, true, true, true, true],
-            })),
-        };
-        assert_eq!(intended_list, list);
-        assert_eq!(as_boolean_array(&list.to_array()), array.deref());
-    }
-
-    #[test]
-    fn test_primitive_float_16_list() {
+    fn test_float_16_list() {
         let array: Float16Array = vec![
             Some(f16::from_f32(1.0)),
             Some(f16::from_f32(2.0)),
@@ -1447,8 +1499,9 @@ pub mod tests {
         assert_eq!(intended_list, list);
         assert_eq!(as_primitive_array::<Float16Type>(&list.to_array()), &array);
     }
+
     #[test]
-    fn test_primitive_float_16_list_nulless() {
+    fn test_float_16_list_nulless() {
         let array: Float16Array = [
             f16::from_f32(1.0),
             f16::from_f32(2.0),
@@ -1467,87 +1520,5 @@ pub mod tests {
         };
         assert_eq!(intended_list, list);
         assert_eq!(as_primitive_array::<Float16Type>(&list.to_array()), &array);
-    }
-
-    #[test]
-    fn test_string_list() {
-        let values = vec![Some("1.0"), Some("2.0"), None, Some("3.0"), Some("4.0")];
-        let array = Arc::new(StringArray::from(values));
-        let list = array.into_list();
-        let intended_list = TableList {
-            values: Some(table_list::Values::Utf8(Utf8List {
-                values: vec![
-                    "1.0".to_string(),
-                    "2.0".to_string(),
-                    String::new(),
-                    "3.0".to_string(),
-                    "4.0".to_string(),
-                ],
-                set: vec![true, true, false, true, true],
-            })),
-        };
-        assert_eq!(intended_list, list);
-        assert_eq!(as_string_array(&list.to_array()), array.deref());
-    }
-    #[test]
-    fn test_string_list_nulless() {
-        let values = vec!["1.0", "2.0", "5.0", "3.0", "4.0"];
-        let array = Arc::new(StringArray::from(values));
-        let list = array.into_list();
-        let intended_list = TableList {
-            values: Some(table_list::Values::Utf8(Utf8List {
-                values: vec![
-                    "1.0".to_string(),
-                    "2.0".to_string(),
-                    "5.0".to_string(),
-                    "3.0".to_string(),
-                    "4.0".to_string(),
-                ],
-                set: vec![true, true, true, true, true],
-            })),
-        };
-        assert_eq!(intended_list, list);
-        assert_eq!(as_string_array(&list.to_array()), array.deref());
-    }
-
-    #[test]
-    fn test_large_string_list() {
-        let values = vec![Some("1.0"), Some("2.0"), None, Some("3.0"), Some("4.0")];
-        let array = Arc::new(LargeStringArray::from(values));
-        let list = array.into_list();
-        let intended_list = TableList {
-            values: Some(table_list::Values::LargeUtf8(Utf8List {
-                values: vec![
-                    "1.0".to_string(),
-                    "2.0".to_string(),
-                    String::new(),
-                    "3.0".to_string(),
-                    "4.0".to_string(),
-                ],
-                set: vec![true, true, false, true, true],
-            })),
-        };
-        assert_eq!(intended_list, list);
-        assert_eq!(as_largestring_array(&list.to_array()), array.deref());
-    }
-    #[test]
-    fn test_large_string_list_nulless() {
-        let values = vec!["1.0", "2.0", "5.0", "3.0", "4.0"];
-        let array = Arc::new(LargeStringArray::from(values));
-        let list = array.into_list();
-        let intended_list = TableList {
-            values: Some(table_list::Values::LargeUtf8(Utf8List {
-                values: vec![
-                    "1.0".to_string(),
-                    "2.0".to_string(),
-                    "5.0".to_string(),
-                    "3.0".to_string(),
-                    "4.0".to_string(),
-                ],
-                set: vec![true, true, true, true, true],
-            })),
-        };
-        assert_eq!(intended_list, list);
-        assert_eq!(as_largestring_array(&list.to_array()), array.deref());
     }
 }
