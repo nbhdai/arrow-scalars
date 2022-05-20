@@ -1160,7 +1160,6 @@ pub mod tests {
         vec![1, 2, 0, 3, 4],
         vec![true, true, false, true, true]
     );
-
     primitive_list_test!(
         test_uint8_list_nulless,
         as_primitive_array::<UInt8Type>,
@@ -1366,7 +1365,6 @@ pub mod tests {
         vec![true, false, false, true, false],
         vec![true, true, false, true, true]
     );
-
     primitive_list_push_test!(
         test_int8_list_push,
         Int8Type,
@@ -1499,7 +1497,6 @@ pub mod tests {
         assert_eq!(intended_list, list);
         assert_eq!(as_primitive_array::<Float16Type>(&list.to_array()), &array);
     }
-
     #[test]
     fn test_float_16_list_nulless() {
         let array: Float16Array = [
