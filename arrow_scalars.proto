@@ -1,0 +1,192 @@
+syntax = "proto3";
+package arrow_scalars;
+
+enum PrimitiveDataType {
+    null = 0;
+    boolean = 1;
+    int8 = 2;
+    int16 = 3;
+    int32 = 4;
+    int64 = 5;
+    uint8 = 6;
+    uint16 = 7;
+    uint32 = 8;
+    uint64 = 9;
+    float16 = 10;
+    float32 = 11;
+    float64 = 12;
+    timestamp = 13;
+    date32 = 14;
+    date64 = 15;
+    time32 = 16;
+    time64 = 17;
+    interval = 18;
+    binary = 19;
+    utf8 = 20;
+    large_utf8 = 21;
+}
+
+message TableScalar {
+    enum TimeUnit {
+        second = 0;
+        millisecond = 1;
+        microsecond = 2;
+        nanosecond = 3;
+    }
+    message Time {
+        TimeUnit unit = 1;
+        int64 time = 2;
+        string tz = 3;
+    }
+    message Interval {
+        oneof unit {
+            int32 year_month = 1;
+            int64 day_time = 2;
+            // le encoded u128
+            bytes month_day_nano = 3;
+        }
+    }
+    message Struct {
+        repeated TableScalar elements = 1;
+    }
+    message Map {
+        TableList keys = 1;
+        TableList values = 2;
+    }
+    message TableList {
+        message BooleanList {
+            repeated bool values = 1;
+            repeated bool set = 2;
+        }
+        message Int8List {
+            repeated int32 values = 1;
+            repeated bool set = 2;
+        }
+        message Int16List {
+            repeated int32 values = 1;
+            repeated bool set = 2;
+        }
+        message Int32List {
+            repeated int32 values = 1;
+            repeated bool set = 2;
+        }
+        message Int64List {
+            repeated int64 values = 1;
+            repeated bool set = 2;
+        }
+        message UInt8List {
+            repeated uint32 values = 1;
+            repeated bool set = 2;
+        }
+        message UInt16List {
+            repeated uint32 values = 1;
+            repeated bool set = 2;
+        }
+        message UInt32List {
+            repeated uint32 values = 1;
+            repeated bool set = 2;
+        }
+        message UInt64List {
+            repeated uint64 values = 1;
+            repeated bool set = 2;
+        }
+        message Float16List {
+            repeated float values = 1;
+            repeated bool set = 2;
+        }
+        message Float32List {
+            repeated float values = 1;
+            repeated bool set = 2;
+        }
+        message Float64List {
+            repeated double values = 1;
+            repeated bool set = 2;
+        }
+        message TimeList {
+            TimeUnit unit = 1;
+            repeated int64 times = 2;
+            string tz = 3;
+        }
+        message IntervalList {
+            repeated Interval values = 1;
+            repeated bool set = 2;
+        }
+        message BinaryList {
+            repeated bytes values = 1;
+            repeated bool set = 2;
+        }
+        message Utf8List {
+            repeated string values = 1;
+            repeated bool set = 2;
+        }
+        message DictionaryList {
+            TableList values = 1;
+            PrimitiveDataType index_type = 2;
+        }
+        message StructList {
+            repeated TableList values = 1;
+            repeated bool set = 2;
+        }
+        message ListList {
+            repeated TableList values = 1;
+            repeated bool set = 2;
+            PrimitiveDataType list_type = 3;
+        }
+
+        oneof values {
+            BooleanList boolean = 1;
+            Int8List int8 = 3;
+            Int16List int16 = 4;
+            Int32List int32 = 5;
+            Int64List int64 = 6;
+            UInt8List uint8 = 7;
+            UInt16List uint16 = 8;
+            UInt32List uint32 = 9;
+            UInt64List uint64 = 10;
+            Float16List float16 = 11;
+            Float32List float32 = 12;
+            Float64List float64 = 13;
+            TimeList timestamp = 14;
+            Int32List date32 = 15;
+            Int64List date64 = 16;
+            TimeList time32 = 17;
+            TimeList time64 = 18;
+            IntervalList interval = 19;
+            BinaryList binary = 20;
+            Utf8List utf8 = 21;
+            Utf8List large_utf8 = 22;
+            ListList list = 23;
+            ListList large_list = 24;
+        }
+    }
+    
+    oneof value {
+        bool null = 1;
+        bool boolean = 2;
+        int32 int8 = 3;
+        int32 int16 = 4;
+        int32 int32 = 5;
+        int64 int64 = 6;
+        uint32 uint8 = 7;
+        uint32 uint16 = 8;
+        uint32 uint32 = 9;
+        uint64 uint64 = 10;
+        float float16 = 11;
+        float float32 = 12;
+        double float64 = 13;
+        Time timestamp = 14;
+        int32 date32 = 15;
+        int64 date64 = 16;
+        Time time32 = 17;
+        Time time64 = 18;
+        Interval interval = 19;
+        bytes binary = 20;
+        string utf8 = 21;
+        string large_utf8 = 22;
+        Struct struct = 23;
+        // We don't care about the exact index in dictionaries, so we don't encode it.
+        TableScalar dictionary = 24;
+        TableList list = 25;
+        Map map = 26;
+    }
+}
