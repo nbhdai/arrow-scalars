@@ -13,4 +13,4 @@ prost = { version = "0.9", default-features = false }
 chrono = "0.4"
 
 [build-dependencies]
-tonic-build = "0.6.2"
+tonic-build = { version = "0.6.2", default-features = false, features = ["prost"] }
