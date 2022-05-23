@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 arrow = {version = "14.0", default-features = false}
 half = "1.8.2"
-tonic = { version = "0.6", default-features = false, features = ["codegen", "prost"]} 
+tonic = { version = "0.6.2", default-features = false, features = ["codegen", "prost"]} 
 prost = { version = "0.9", default-features = false }
 chrono = "0.4"
 
