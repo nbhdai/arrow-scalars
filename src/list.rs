@@ -889,7 +889,7 @@ macro_rules! small_primitive_list_ingestor {
     ($func_name:ident, $primitive_type:ty, $values_type:ident, $list_type:ident) => {
         fn $func_name(list: &table_list::ListList) -> ArrayRef {
             let primitive_list_builder =
-                PrimitiveBuilder::<$primitive_type>::new(list.values.iter().map(|l| l.len()).sum());
+                PrimitiveBuilder::<$primitive_type>::with_capacity(list.values.iter().map(|l| l.len()).sum());
             let mut list_builder =
                 ListBuilder::with_capacity(primitive_list_builder, list.values.len());
 
@@ -903,15 +903,14 @@ macro_rules! small_primitive_list_ingestor {
                     values.iter().zip(set.iter()).for_each(|(v, s)| {
                         if *s {
                             primitive_list_builder
-                                .append_value((*v).try_into().unwrap())
-                                .unwrap();
+                                .append_value((*v).try_into().unwrap());
                         } else {
-                            primitive_list_builder.append_null().unwrap();
+                            primitive_list_builder.append_null();
                         }
                     });
-                    list_builder.append(true).unwrap();
+                    list_builder.append(true);
                 } else {
-                    list_builder.append(false).unwrap();
+                    list_builder.append(false);
                 }
             }
             Arc::new(list_builder.finish())
@@ -922,7 +921,7 @@ macro_rules! primitive_list_ingestor {
     ($func_name:ident, $primitive_type:ty, $values_type:ident, $list_type:ident) => {
         fn $func_name(list: &table_list::ListList) -> ArrayRef {
             let primitive_list_builder =
-                PrimitiveBuilder::<$primitive_type>::new(list.values.iter().map(|l| l.len()).sum());
+                PrimitiveBuilder::<$primitive_type>::with_capacity(list.values.iter().map(|l| l.len()).sum());
             let mut list_builder =
                 ListBuilder::with_capacity(primitive_list_builder, list.values.len());
 
@@ -934,11 +933,10 @@ macro_rules! primitive_list_ingestor {
                 {
                     let primitive_list_builder = list_builder.values();
                     primitive_list_builder
-                        .append_values(values.as_slice(), set.as_slice())
-                        .unwrap();
-                    list_builder.append(true).unwrap();
+                        .append_values(values.as_slice(), set.as_slice());
+                    list_builder.append(true);
                 } else {
-                    list_builder.append(false).unwrap();
+                    list_builder.append(false);
                 }
             }
             Arc::new(list_builder.finish())
@@ -948,7 +946,7 @@ macro_rules! primitive_list_ingestor {
 
 fn primitive_list_list_builder_float16(list: &table_list::ListList) -> ArrayRef {
     let primitive_list_builder =
-        PrimitiveBuilder::<Float16Type>::new(list.values.iter().map(|l| l.len()).sum());
+        PrimitiveBuilder::<Float16Type>::with_capacity(list.values.iter().map(|l| l.len()).sum());
     let mut list_builder = ListBuilder::with_capacity(primitive_list_builder, list.values.len());
 
     for list in list.values.iter() {
@@ -959,15 +957,14 @@ fn primitive_list_list_builder_float16(list: &table_list::ListList) -> ArrayRef 
             values.iter().zip(set.iter()).for_each(|(v, s)| {
                 if *s {
                     primitive_list_builder
-                        .append_value(f16::from_f32(*v))
-                        .unwrap();
+                        .append_value(f16::from_f32(*v));
                 } else {
-                    primitive_list_builder.append_null().unwrap();
+                    primitive_list_builder.append_null();
                 }
             });
-            list_builder.append(true).unwrap();
+            list_builder.append(true);
         } else {
-            list_builder.append(false).unwrap();
+            list_builder.append(false);
         }
     }
     Arc::new(list_builder.finish())
