@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
-use crate::PrimitiveDataType;
-use crate::{table_scalar, table_scalar::table_list, table_scalar::TableList, TableScalar};
+use crate::table_scalar::Time;
+use crate::{PrimitiveDataType, ScalarValuable};
+use crate::{table_scalar, table_list, TableList, TableScalar};
 use arrow::array::*;
 use arrow::datatypes::*;
 use half::f16;
@@ -29,11 +30,11 @@ fn arrow_data_type_to_proto(data_type: &DataType) -> Option<PrimitiveDataType> {
 }
 
 pub trait ListValuable {
-    fn into_list(&self) -> TableList;
+    fn clone_as_list(&self) -> TableList;
 }
 
 impl<T: Array> ListValuable for T {
-    fn into_list(&self) -> TableList {
+    fn clone_as_list(&self) -> TableList {
         let values = match self.data_type() {
             // Hard to do with a macro.
             DataType::Int8 => {
@@ -284,7 +285,7 @@ impl<T: Array> ListValuable for T {
                 let mut set = Vec::with_capacity(array.len());
                 for value in array.iter() {
                     if let Some(value) = value {
-                        values.push(value.into_list());
+                        values.push(value.clone_as_list());
                         set.push(true);
                     } else {
                         values.push(TableList::default());
@@ -305,7 +306,7 @@ impl<T: Array> ListValuable for T {
                 let mut set = Vec::with_capacity(array.len());
                 for value in array.iter() {
                     if let Some(value) = value {
-                        values.push(value.into_list());
+                        values.push(value.clone_as_list());
                         set.push(true);
                     } else {
                         values.push(TableList::default());
@@ -326,6 +327,251 @@ impl<T: Array> ListValuable for T {
         TableList { values }
     }
 }
+
+impl ScalarValuable for TableList {
+    fn scalar(&self, i: usize) -> TableScalar {
+        match self.values.as_ref() {
+            Some(table_list::Values::Boolean(list)) => {
+                let value = list.values[i];
+                if list.set[i] {
+                    TableScalar { value: Some(table_scalar::Value::Boolean(value)) }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::Int8(list)) => {
+                let value = list.values[i];
+                if list.set[i] {
+                    TableScalar { value: Some(table_scalar::Value::Int8(value)) }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::Int16(list)) => {
+                let value = list.values[i];
+                if list.set[i] {
+                    TableScalar { value: Some(table_scalar::Value::Int16(value)) }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::Int32(list)) => {
+                let value = list.values[i];
+                if list.set[i] {
+                    TableScalar { value: Some(table_scalar::Value::Int32(value)) }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::Int64(list)) => {
+                let value = list.values[i];
+                if list.set[i] {
+                    TableScalar { value: Some(table_scalar::Value::Int64(value)) }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::Uint8(list)) => {
+                let value = list.values[i];
+                if list.set[i] {
+                    TableScalar { value: Some(table_scalar::Value::Uint8(value)) }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::Uint16(list)) => {
+                let value = list.values[i];
+                if list.set[i] {
+                    TableScalar { value: Some(table_scalar::Value::Uint16(value)) }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::Uint32(list)) => {
+                let value = list.values[i];
+                if list.set[i] {
+                    TableScalar { value: Some(table_scalar::Value::Uint32(value)) }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::Uint64(list)) => {
+                let value = list.values[i];
+                if list.set[i] {
+                    TableScalar { value: Some(table_scalar::Value::Uint64(value)) }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::Float32(list)) => {
+                let value = list.values[i];
+                if list.set[i] {
+                    TableScalar { value: Some(table_scalar::Value::Float32(value)) }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::Float64(list)) => {
+                let value = list.values[i];
+                if list.set[i] {
+                    TableScalar { value: Some(table_scalar::Value::Float64(value)) }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::Utf8(list)) => {
+                let value = list.values[i].clone();
+                if list.set[i] {
+                    TableScalar { value: Some(table_scalar::Value::Utf8(value)) }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::LargeUtf8(list)) => {
+                let value = list.values[i].clone();
+                if list.set[i] {
+                    TableScalar { value: Some(table_scalar::Value::LargeUtf8(value)) }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::Binary(list)) => {
+                let value = list.values[i].clone();
+                if list.set[i] {
+                    TableScalar { value: Some(table_scalar::Value::Binary(value)) }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::LargeBinary(list)) => {
+                let value = list.values[i].clone();
+                if list.set[i] {
+                    TableScalar { value: Some(table_scalar::Value::Binary(value)) }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::List(list)) => {
+                let value = list.values[i].clone();
+                if list.set[i] {
+                    TableScalar { value: Some(table_scalar::Value::List(value)) }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::LargeList(list)) => {
+                let value = list.values[i].clone();
+                if list.set[i] {
+                    TableScalar { value: Some(table_scalar::Value::List(value)) }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::Timestamp(list)) => {
+                let unit = list.unit;
+                let time = list.times[i];
+                let tz = list.tz.clone();
+                let time = Time {
+                    unit,
+                    time,
+                    tz,
+                };
+                if list.set[i] {
+                    TableScalar { value: Some(table_scalar::Value::Timestamp(time)) }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::Date32(list)) => {
+                let value = list.values[i];
+                if list.set[i] {
+                    TableScalar { value: Some(table_scalar::Value::Date32(value)) }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::Date64(list)) => {
+                let value = list.values[i];
+                if list.set[i] {
+                    TableScalar { value: Some(table_scalar::Value::Date64(value)) }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::Time32(list)) => {
+                let unit = list.unit;
+                let time = list.times[i];
+                let tz = list.tz.clone();
+                let time = Time {
+                    unit,
+                    time,
+                    tz,
+                };
+                if list.set[i] {
+                    TableScalar { value: Some(table_scalar::Value::Time32(time)) }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::Time64(list)) => {
+                let unit = list.unit;
+                let time = list.times[i];
+                let tz = list.tz.clone();
+                let time = Time {
+                    unit,
+                    time,
+                    tz,
+                };
+                if list.set[i] {
+                    TableScalar { value: Some(table_scalar::Value::Time64(time)) }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::Struct(list)) => {
+                let value = list.values[i].clone();
+                if list.set[i] {
+                    TableScalar { value: Some(table_scalar::Value::Struct(value)) }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::Dictionary(list)) => {
+                let value = list.values[i].clone();
+                if list.set[i] {
+                    TableScalar { value: Some(table_scalar::Value::Dictionary(value)) }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::Union(list)) => {
+                let value = list.values[i].clone();
+                if list.set[i] {
+                    TableScalar { value: Some(table_scalar::Value::Union(value)) }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::FixedSizeBinary(list)) => {
+                let value = list.values[i].clone();
+                if list.set[i] {
+                    TableScalar { value: Some(table_scalar::Value::FixedSizeBinary(value)) }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::FixedSizeList(list)) => {
+                let value = list.values[i].clone();
+                if list.set[i] {
+                    TableScalar { value: Some(table_scalar::Value::FixedSizeList(value)) }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+        }
+    }
+}
+
 
 struct TableListIter<'a, T: Iterator> {
     values: T,
@@ -466,6 +712,87 @@ impl TableList {
                 table_scalar::Value::LargeUtf8(b),
             ) => {
                 values.push(b);
+                set.push(true);
+            }
+            (
+                table_list::Values::Timestamp(table_list::TimeList {
+                    unit,
+                    times,
+                    tz,
+                    set,
+                })
+                | table_list::Values::Time32(table_list::TimeList {
+                    unit,
+                    times,
+                    tz,
+                    set,
+                })
+                | table_list::Values::Time64(table_list::TimeList {
+                    unit,
+                    times,
+                    tz,
+                    set,
+                }),
+                table_scalar::Value::Timestamp(b),
+            ) => {
+                if b.unit != *unit || b.tz != *tz {
+                    return Err(TableScalar { value: Some(table_scalar::Value::Timestamp(b)) });
+                }
+                times.push(b.time);
+                set.push(true);
+            }
+            (
+                table_list::Values::Timestamp(table_list::TimeList {
+                    unit,
+                    times,
+                    tz,
+                    set,
+                })
+                | table_list::Values::Time32(table_list::TimeList {
+                    unit,
+                    times,
+                    tz,
+                    set,
+                })
+                | table_list::Values::Time64(table_list::TimeList {
+                    unit,
+                    times,
+                    tz,
+                    set,
+                }),
+                table_scalar::Value::Time32(b),
+            ) => {
+                if b.unit != *unit || b.tz != *tz {
+                    return Err(TableScalar { value: Some(table_scalar::Value::Time32(b)) });
+                }
+                times.push(b.time);
+                set.push(true);
+            }
+            (
+                table_list::Values::Timestamp(table_list::TimeList {
+                    unit,
+                    times,
+                    tz,
+                    set,
+                })
+                | table_list::Values::Time32(table_list::TimeList {
+                    unit,
+                    times,
+                    tz,
+                    set,
+                })
+                | table_list::Values::Time64(table_list::TimeList {
+                    unit,
+                    times,
+                    tz,
+                    set,
+                }),
+                table_scalar::Value::Time64(b),
+            ) => {
+                if b.unit != *unit || b.tz != *tz {
+                    return Err(TableScalar { value: Some(table_scalar::Value::Time64(b)) });
+                }
+                times.push(b.time);
                 set.push(true);
             }
             (table_list::Values::List(values), table_scalar::Value::List(list)) => {
@@ -852,6 +1179,10 @@ impl TableList {
         }
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     pub fn len(&self) -> usize {
         if self.values.is_none() {
             return 0;
@@ -888,8 +1219,9 @@ impl TableList {
 macro_rules! small_primitive_list_ingestor {
     ($func_name:ident, $primitive_type:ty, $values_type:ident, $list_type:ident) => {
         fn $func_name(list: &table_list::ListList) -> ArrayRef {
-            let primitive_list_builder =
-                PrimitiveBuilder::<$primitive_type>::with_capacity(list.values.iter().map(|l| l.len()).sum());
+            let primitive_list_builder = PrimitiveBuilder::<$primitive_type>::with_capacity(
+                list.values.iter().map(|l| l.len()).sum(),
+            );
             let mut list_builder =
                 ListBuilder::with_capacity(primitive_list_builder, list.values.len());
 
@@ -902,8 +1234,7 @@ macro_rules! small_primitive_list_ingestor {
                     let primitive_list_builder = list_builder.values();
                     values.iter().zip(set.iter()).for_each(|(v, s)| {
                         if *s {
-                            primitive_list_builder
-                                .append_value((*v).try_into().unwrap());
+                            primitive_list_builder.append_value((*v).try_into().unwrap());
                         } else {
                             primitive_list_builder.append_null();
                         }
@@ -920,8 +1251,9 @@ macro_rules! small_primitive_list_ingestor {
 macro_rules! primitive_list_ingestor {
     ($func_name:ident, $primitive_type:ty, $values_type:ident, $list_type:ident) => {
         fn $func_name(list: &table_list::ListList) -> ArrayRef {
-            let primitive_list_builder =
-                PrimitiveBuilder::<$primitive_type>::with_capacity(list.values.iter().map(|l| l.len()).sum());
+            let primitive_list_builder = PrimitiveBuilder::<$primitive_type>::with_capacity(
+                list.values.iter().map(|l| l.len()).sum(),
+            );
             let mut list_builder =
                 ListBuilder::with_capacity(primitive_list_builder, list.values.len());
 
@@ -932,8 +1264,7 @@ macro_rules! primitive_list_ingestor {
                 })) = &list.values
                 {
                     let primitive_list_builder = list_builder.values();
-                    primitive_list_builder
-                        .append_values(values.as_slice(), set.as_slice());
+                    primitive_list_builder.append_values(values.as_slice(), set.as_slice());
                     list_builder.append(true);
                 } else {
                     list_builder.append(false);
@@ -956,8 +1287,7 @@ fn primitive_list_list_builder_float16(list: &table_list::ListList) -> ArrayRef 
             let primitive_list_builder = list_builder.values();
             values.iter().zip(set.iter()).for_each(|(v, s)| {
                 if *s {
-                    primitive_list_builder
-                        .append_value(f16::from_f32(*v));
+                    primitive_list_builder.append_value(f16::from_f32(*v));
                 } else {
                     primitive_list_builder.append_null();
                 }
@@ -1031,7 +1361,7 @@ pub mod tests {
     use std::ops::Deref;
 
     use super::*;
-    use crate::table_scalar::table_list::Float16List;
+    use crate::table_list::Float16List;
 
     macro_rules! primitive_list_test {
         ($func_name:ident, $prim_type:expr, $array_type:ty, $values_type:ident, $list_type:ident, $values:expr, $intended_values:expr, $set:expr) => {
@@ -1039,7 +1369,7 @@ pub mod tests {
             fn $func_name() {
                 let values = $values;
                 let array = Arc::new(<$array_type>::from(values));
-                let list = array.into_list();
+                let list = array.clone_as_list();
                 let intended_list = TableList {
                     values: Some(table_list::Values::$values_type(table_list::$list_type {
                         values: $intended_values,
@@ -1484,7 +1814,7 @@ pub mod tests {
         ]
         .into_iter()
         .collect();
-        let list = array.into_list();
+        let list = array.clone_as_list();
         let intended_list = TableList {
             values: Some(table_list::Values::Float16(Float16List {
                 values: vec![1.0, 2.0, 0.0, 3.0, 4.0],
@@ -1505,7 +1835,7 @@ pub mod tests {
         ]
         .into_iter()
         .collect();
-        let list = array.into_list();
+        let list = array.clone_as_list();
         let intended_list = TableList {
             values: Some(table_list::Values::Float16(Float16List {
                 values: vec![1.0, 2.0, 5.0, 3.0, 4.0],

@@ -1,6 +1,8 @@
 use crate::table_scalar;
 use chrono::Timelike;
 
+use prost_types::Timestamp;
+
 impl From<table_scalar::Time> for chrono::NaiveDateTime {
     fn from(val: table_scalar::Time) -> Self {
         match val.unit() {
@@ -91,6 +93,35 @@ impl From<table_scalar::Time> for chrono::NaiveTime {
                 )
             }
         }
+    }
+}
+
+impl From<table_scalar::Time> for Timestamp {
+    fn from(val: table_scalar::Time) -> Self {
+        let dt = chrono::NaiveDateTime::from(val);
+        Timestamp {
+            seconds: dt.timestamp(),
+            nanos: dt.timestamp_subsec_nanos() as i32,
+        }
+    }
+}
+
+impl IntoScalarTime for Timestamp {
+    fn scalar_seconds_from_midnight(&self) -> table_scalar::Time {
+        let dt = chrono::NaiveDateTime::from_timestamp(self.seconds, self.nanos as u32);
+        dt.time().scalar_seconds_from_midnight()
+    }
+    fn scalar_milliseconds_from_midnight(&self) -> table_scalar::Time {
+        let dt = chrono::NaiveDateTime::from_timestamp(self.seconds, self.nanos as u32);
+        dt.time().scalar_milliseconds_from_midnight()
+    }
+    fn scalar_microseconds_from_midnight(&self) -> table_scalar::Time {
+        let dt = chrono::NaiveDateTime::from_timestamp(self.seconds, self.nanos as u32);
+        dt.time().scalar_microseconds_from_midnight()
+    }
+    fn scalar_nanoseconds_from_midnight(&self) -> table_scalar::Time {
+        let dt = chrono::NaiveDateTime::from_timestamp(self.seconds, self.nanos as u32);
+        dt.time().scalar_nanoseconds_from_midnight()
     }
 }
 

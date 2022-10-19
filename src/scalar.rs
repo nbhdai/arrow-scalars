@@ -234,7 +234,7 @@ impl<T: Array> ScalarValuable for T {
                     .as_any()
                     .downcast_ref::<ListArray>()
                     .expect("Just checked it has this type.");
-                let value = array.value(i).into_list();
+                let value = array.value(i).clone_as_list();
                 Some(table_scalar::Value::List(value))
             }
             _ => unimplemented!(),
@@ -247,7 +247,7 @@ impl<T: Array> ScalarValuable for T {
 pub mod tests {
     use std::sync::Arc;
 
-    use crate::table_scalar::{table_list, TableList};
+    use crate::{table_list, TableList};
 
     use super::*;
 
@@ -491,7 +491,7 @@ pub mod tests {
         let values = vec!["one", "one", "three", "one", "one"];
         let array: Arc<DictionaryArray<Int8Type>> = Arc::new(values.into_iter().collect());
 
-        let list = array.into_list();
+        let list = array.clone_as_list();
         let intended_list = TableList {
             values: Some(table_list::Values::Dictionary(Box::new(TableList {
                 values: Some(table_list::Values::Utf8(Utf8List {

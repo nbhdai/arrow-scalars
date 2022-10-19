@@ -1,6 +1,6 @@
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct TableScalar {
-    #[prost(oneof="table_scalar::Value", tags="1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26")]
+    #[prost(oneof="table_scalar::Value", tags="1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27")]
     pub value: ::core::option::Option<table_scalar::Value>,
 }
 /// Nested message and enum types in `TableScalar`.
@@ -40,203 +40,9 @@ pub mod table_scalar {
     #[derive(Clone, PartialEq, ::prost::Message)]
     pub struct Map {
         #[prost(message, optional, tag="1")]
-        pub keys: ::core::option::Option<TableList>,
+        pub keys: ::core::option::Option<super::TableList>,
         #[prost(message, optional, tag="2")]
-        pub values: ::core::option::Option<TableList>,
-    }
-    #[derive(Clone, PartialEq, ::prost::Message)]
-    pub struct TableList {
-        #[prost(oneof="table_list::Values", tags="1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24")]
-        pub values: ::core::option::Option<table_list::Values>,
-    }
-    /// Nested message and enum types in `TableList`.
-    pub mod table_list {
-        #[derive(Clone, PartialEq, ::prost::Message)]
-        pub struct BooleanList {
-            #[prost(bool, repeated, tag="1")]
-            pub values: ::prost::alloc::vec::Vec<bool>,
-            #[prost(bool, repeated, tag="2")]
-            pub set: ::prost::alloc::vec::Vec<bool>,
-        }
-        #[derive(Clone, PartialEq, ::prost::Message)]
-        pub struct Int8List {
-            #[prost(int32, repeated, tag="1")]
-            pub values: ::prost::alloc::vec::Vec<i32>,
-            #[prost(bool, repeated, tag="2")]
-            pub set: ::prost::alloc::vec::Vec<bool>,
-        }
-        #[derive(Clone, PartialEq, ::prost::Message)]
-        pub struct Int16List {
-            #[prost(int32, repeated, tag="1")]
-            pub values: ::prost::alloc::vec::Vec<i32>,
-            #[prost(bool, repeated, tag="2")]
-            pub set: ::prost::alloc::vec::Vec<bool>,
-        }
-        #[derive(Clone, PartialEq, ::prost::Message)]
-        pub struct Int32List {
-            #[prost(int32, repeated, tag="1")]
-            pub values: ::prost::alloc::vec::Vec<i32>,
-            #[prost(bool, repeated, tag="2")]
-            pub set: ::prost::alloc::vec::Vec<bool>,
-        }
-        #[derive(Clone, PartialEq, ::prost::Message)]
-        pub struct Int64List {
-            #[prost(int64, repeated, tag="1")]
-            pub values: ::prost::alloc::vec::Vec<i64>,
-            #[prost(bool, repeated, tag="2")]
-            pub set: ::prost::alloc::vec::Vec<bool>,
-        }
-        #[derive(Clone, PartialEq, ::prost::Message)]
-        pub struct UInt8List {
-            #[prost(uint32, repeated, tag="1")]
-            pub values: ::prost::alloc::vec::Vec<u32>,
-            #[prost(bool, repeated, tag="2")]
-            pub set: ::prost::alloc::vec::Vec<bool>,
-        }
-        #[derive(Clone, PartialEq, ::prost::Message)]
-        pub struct UInt16List {
-            #[prost(uint32, repeated, tag="1")]
-            pub values: ::prost::alloc::vec::Vec<u32>,
-            #[prost(bool, repeated, tag="2")]
-            pub set: ::prost::alloc::vec::Vec<bool>,
-        }
-        #[derive(Clone, PartialEq, ::prost::Message)]
-        pub struct UInt32List {
-            #[prost(uint32, repeated, tag="1")]
-            pub values: ::prost::alloc::vec::Vec<u32>,
-            #[prost(bool, repeated, tag="2")]
-            pub set: ::prost::alloc::vec::Vec<bool>,
-        }
-        #[derive(Clone, PartialEq, ::prost::Message)]
-        pub struct UInt64List {
-            #[prost(uint64, repeated, tag="1")]
-            pub values: ::prost::alloc::vec::Vec<u64>,
-            #[prost(bool, repeated, tag="2")]
-            pub set: ::prost::alloc::vec::Vec<bool>,
-        }
-        #[derive(Clone, PartialEq, ::prost::Message)]
-        pub struct Float16List {
-            #[prost(float, repeated, tag="1")]
-            pub values: ::prost::alloc::vec::Vec<f32>,
-            #[prost(bool, repeated, tag="2")]
-            pub set: ::prost::alloc::vec::Vec<bool>,
-        }
-        #[derive(Clone, PartialEq, ::prost::Message)]
-        pub struct Float32List {
-            #[prost(float, repeated, tag="1")]
-            pub values: ::prost::alloc::vec::Vec<f32>,
-            #[prost(bool, repeated, tag="2")]
-            pub set: ::prost::alloc::vec::Vec<bool>,
-        }
-        #[derive(Clone, PartialEq, ::prost::Message)]
-        pub struct Float64List {
-            #[prost(double, repeated, tag="1")]
-            pub values: ::prost::alloc::vec::Vec<f64>,
-            #[prost(bool, repeated, tag="2")]
-            pub set: ::prost::alloc::vec::Vec<bool>,
-        }
-        #[derive(Clone, PartialEq, ::prost::Message)]
-        pub struct TimeList {
-            #[prost(enumeration="super::TimeUnit", tag="1")]
-            pub unit: i32,
-            #[prost(int64, repeated, tag="2")]
-            pub times: ::prost::alloc::vec::Vec<i64>,
-            #[prost(string, tag="3")]
-            pub tz: ::prost::alloc::string::String,
-        }
-        #[derive(Clone, PartialEq, ::prost::Message)]
-        pub struct IntervalList {
-            #[prost(message, repeated, tag="1")]
-            pub values: ::prost::alloc::vec::Vec<super::Interval>,
-            #[prost(bool, repeated, tag="2")]
-            pub set: ::prost::alloc::vec::Vec<bool>,
-        }
-        #[derive(Clone, PartialEq, ::prost::Message)]
-        pub struct BinaryList {
-            #[prost(bytes="vec", repeated, tag="1")]
-            pub values: ::prost::alloc::vec::Vec<::prost::alloc::vec::Vec<u8>>,
-            #[prost(bool, repeated, tag="2")]
-            pub set: ::prost::alloc::vec::Vec<bool>,
-        }
-        #[derive(Clone, PartialEq, ::prost::Message)]
-        pub struct Utf8List {
-            #[prost(string, repeated, tag="1")]
-            pub values: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
-            #[prost(bool, repeated, tag="2")]
-            pub set: ::prost::alloc::vec::Vec<bool>,
-        }
-        #[derive(Clone, PartialEq, ::prost::Message)]
-        pub struct DictionaryList {
-            #[prost(message, optional, tag="1")]
-            pub values: ::core::option::Option<super::TableList>,
-            #[prost(enumeration="super::super::PrimitiveDataType", tag="2")]
-            pub index_type: i32,
-        }
-        #[derive(Clone, PartialEq, ::prost::Message)]
-        pub struct StructList {
-            #[prost(message, repeated, tag="1")]
-            pub values: ::prost::alloc::vec::Vec<super::TableList>,
-            #[prost(bool, repeated, tag="2")]
-            pub set: ::prost::alloc::vec::Vec<bool>,
-        }
-        #[derive(Clone, PartialEq, ::prost::Message)]
-        pub struct ListList {
-            #[prost(message, repeated, tag="1")]
-            pub values: ::prost::alloc::vec::Vec<super::TableList>,
-            #[prost(bool, repeated, tag="2")]
-            pub set: ::prost::alloc::vec::Vec<bool>,
-            #[prost(enumeration="super::super::PrimitiveDataType", tag="3")]
-            pub list_type: i32,
-        }
-        #[derive(Clone, PartialEq, ::prost::Oneof)]
-        pub enum Values {
-            #[prost(message, tag="1")]
-            Boolean(BooleanList),
-            #[prost(message, tag="3")]
-            Int8(Int8List),
-            #[prost(message, tag="4")]
-            Int16(Int16List),
-            #[prost(message, tag="5")]
-            Int32(Int32List),
-            #[prost(message, tag="6")]
-            Int64(Int64List),
-            #[prost(message, tag="7")]
-            Uint8(UInt8List),
-            #[prost(message, tag="8")]
-            Uint16(UInt16List),
-            #[prost(message, tag="9")]
-            Uint32(UInt32List),
-            #[prost(message, tag="10")]
-            Uint64(UInt64List),
-            #[prost(message, tag="11")]
-            Float16(Float16List),
-            #[prost(message, tag="12")]
-            Float32(Float32List),
-            #[prost(message, tag="13")]
-            Float64(Float64List),
-            #[prost(message, tag="14")]
-            Timestamp(TimeList),
-            #[prost(message, tag="15")]
-            Date32(Int32List),
-            #[prost(message, tag="16")]
-            Date64(Int64List),
-            #[prost(message, tag="17")]
-            Time32(TimeList),
-            #[prost(message, tag="18")]
-            Time64(TimeList),
-            #[prost(message, tag="19")]
-            Interval(IntervalList),
-            #[prost(message, tag="20")]
-            Binary(BinaryList),
-            #[prost(message, tag="21")]
-            Utf8(Utf8List),
-            #[prost(message, tag="22")]
-            LargeUtf8(Utf8List),
-            #[prost(message, tag="23")]
-            List(ListList),
-            #[prost(message, tag="24")]
-            LargeList(ListList),
-        }
+        pub values: ::core::option::Option<super::TableList>,
     }
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
@@ -288,20 +94,230 @@ pub mod table_scalar {
         Interval(Interval),
         #[prost(bytes, tag="20")]
         Binary(::prost::alloc::vec::Vec<u8>),
-        #[prost(string, tag="21")]
-        Utf8(::prost::alloc::string::String),
+        #[prost(bytes, tag="21")]
+        LargeBinary(::prost::alloc::vec::Vec<u8>),
         #[prost(string, tag="22")]
+        Utf8(::prost::alloc::string::String),
+        #[prost(string, tag="23")]
         LargeUtf8(::prost::alloc::string::String),
-        #[prost(message, tag="23")]
+        #[prost(message, tag="24")]
         Struct(Struct),
         /// We don't care about the exact index in dictionaries, so we don't encode it.
-        #[prost(message, tag="24")]
-        Dictionary(::prost::alloc::boxed::Box<super::TableScalar>),
         #[prost(message, tag="25")]
-        List(TableList),
+        Dictionary(::prost::alloc::boxed::Box<super::TableScalar>),
         #[prost(message, tag="26")]
+        List(super::TableList),
+        #[prost(message, tag="27")]
         Map(Map),
     }
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TableList {
+    #[prost(oneof="table_list::Values", tags="1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25")]
+    pub values: ::core::option::Option<table_list::Values>,
+}
+/// Nested message and enum types in `TableList`.
+pub mod table_list {
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct BooleanList {
+        #[prost(bool, repeated, tag="1")]
+        pub values: ::prost::alloc::vec::Vec<bool>,
+        #[prost(bool, repeated, tag="2")]
+        pub set: ::prost::alloc::vec::Vec<bool>,
+    }
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct Int8List {
+        #[prost(int32, repeated, tag="1")]
+        pub values: ::prost::alloc::vec::Vec<i32>,
+        #[prost(bool, repeated, tag="2")]
+        pub set: ::prost::alloc::vec::Vec<bool>,
+    }
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct Int16List {
+        #[prost(int32, repeated, tag="1")]
+        pub values: ::prost::alloc::vec::Vec<i32>,
+        #[prost(bool, repeated, tag="2")]
+        pub set: ::prost::alloc::vec::Vec<bool>,
+    }
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct Int32List {
+        #[prost(int32, repeated, tag="1")]
+        pub values: ::prost::alloc::vec::Vec<i32>,
+        #[prost(bool, repeated, tag="2")]
+        pub set: ::prost::alloc::vec::Vec<bool>,
+    }
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct Int64List {
+        #[prost(int64, repeated, tag="1")]
+        pub values: ::prost::alloc::vec::Vec<i64>,
+        #[prost(bool, repeated, tag="2")]
+        pub set: ::prost::alloc::vec::Vec<bool>,
+    }
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct UInt8List {
+        #[prost(uint32, repeated, tag="1")]
+        pub values: ::prost::alloc::vec::Vec<u32>,
+        #[prost(bool, repeated, tag="2")]
+        pub set: ::prost::alloc::vec::Vec<bool>,
+    }
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct UInt16List {
+        #[prost(uint32, repeated, tag="1")]
+        pub values: ::prost::alloc::vec::Vec<u32>,
+        #[prost(bool, repeated, tag="2")]
+        pub set: ::prost::alloc::vec::Vec<bool>,
+    }
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct UInt32List {
+        #[prost(uint32, repeated, tag="1")]
+        pub values: ::prost::alloc::vec::Vec<u32>,
+        #[prost(bool, repeated, tag="2")]
+        pub set: ::prost::alloc::vec::Vec<bool>,
+    }
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct UInt64List {
+        #[prost(uint64, repeated, tag="1")]
+        pub values: ::prost::alloc::vec::Vec<u64>,
+        #[prost(bool, repeated, tag="2")]
+        pub set: ::prost::alloc::vec::Vec<bool>,
+    }
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct Float16List {
+        #[prost(float, repeated, tag="1")]
+        pub values: ::prost::alloc::vec::Vec<f32>,
+        #[prost(bool, repeated, tag="2")]
+        pub set: ::prost::alloc::vec::Vec<bool>,
+    }
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct Float32List {
+        #[prost(float, repeated, tag="1")]
+        pub values: ::prost::alloc::vec::Vec<f32>,
+        #[prost(bool, repeated, tag="2")]
+        pub set: ::prost::alloc::vec::Vec<bool>,
+    }
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct Float64List {
+        #[prost(double, repeated, tag="1")]
+        pub values: ::prost::alloc::vec::Vec<f64>,
+        #[prost(bool, repeated, tag="2")]
+        pub set: ::prost::alloc::vec::Vec<bool>,
+    }
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct TimeList {
+        #[prost(enumeration="super::table_scalar::TimeUnit", tag="1")]
+        pub unit: i32,
+        #[prost(int64, repeated, tag="2")]
+        pub times: ::prost::alloc::vec::Vec<i64>,
+        #[prost(string, tag="3")]
+        pub tz: ::prost::alloc::string::String,
+        #[prost(bool, repeated, tag="4")]
+        pub set: ::prost::alloc::vec::Vec<bool>,
+    }
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct IntervalList {
+        #[prost(message, repeated, tag="1")]
+        pub values: ::prost::alloc::vec::Vec<super::table_scalar::Interval>,
+        #[prost(bool, repeated, tag="2")]
+        pub set: ::prost::alloc::vec::Vec<bool>,
+    }
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct BinaryList {
+        #[prost(bytes="vec", repeated, tag="1")]
+        pub values: ::prost::alloc::vec::Vec<::prost::alloc::vec::Vec<u8>>,
+        #[prost(bool, repeated, tag="2")]
+        pub set: ::prost::alloc::vec::Vec<bool>,
+    }
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct Utf8List {
+        #[prost(string, repeated, tag="1")]
+        pub values: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+        #[prost(bool, repeated, tag="2")]
+        pub set: ::prost::alloc::vec::Vec<bool>,
+    }
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct DictionaryList {
+        #[prost(message, optional, tag="1")]
+        pub values: ::core::option::Option<super::TableList>,
+        #[prost(enumeration="super::PrimitiveDataType", tag="2")]
+        pub index_type: i32,
+    }
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct StructList {
+        #[prost(message, repeated, tag="1")]
+        pub values: ::prost::alloc::vec::Vec<super::TableList>,
+        #[prost(bool, repeated, tag="2")]
+        pub set: ::prost::alloc::vec::Vec<bool>,
+    }
+    #[derive(Clone, PartialEq, ::prost::Message)]
+    pub struct ListList {
+        #[prost(message, repeated, tag="1")]
+        pub values: ::prost::alloc::vec::Vec<super::TableList>,
+        #[prost(bool, repeated, tag="2")]
+        pub set: ::prost::alloc::vec::Vec<bool>,
+        #[prost(enumeration="super::PrimitiveDataType", tag="3")]
+        pub list_type: i32,
+    }
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Values {
+        #[prost(message, tag="1")]
+        Boolean(BooleanList),
+        #[prost(message, tag="3")]
+        Int8(Int8List),
+        #[prost(message, tag="4")]
+        Int16(Int16List),
+        #[prost(message, tag="5")]
+        Int32(Int32List),
+        #[prost(message, tag="6")]
+        Int64(Int64List),
+        #[prost(message, tag="7")]
+        Uint8(UInt8List),
+        #[prost(message, tag="8")]
+        Uint16(UInt16List),
+        #[prost(message, tag="9")]
+        Uint32(UInt32List),
+        #[prost(message, tag="10")]
+        Uint64(UInt64List),
+        #[prost(message, tag="11")]
+        Float16(Float16List),
+        #[prost(message, tag="12")]
+        Float32(Float32List),
+        #[prost(message, tag="13")]
+        Float64(Float64List),
+        #[prost(message, tag="14")]
+        Timestamp(TimeList),
+        #[prost(message, tag="15")]
+        Date32(Int32List),
+        #[prost(message, tag="16")]
+        Date64(Int64List),
+        #[prost(message, tag="17")]
+        Time32(TimeList),
+        #[prost(message, tag="18")]
+        Time64(TimeList),
+        #[prost(message, tag="19")]
+        Interval(IntervalList),
+        #[prost(message, tag="20")]
+        Binary(BinaryList),
+        #[prost(message, tag="21")]
+        LargeBinary(BinaryList),
+        #[prost(message, tag="22")]
+        Utf8(Utf8List),
+        #[prost(message, tag="23")]
+        LargeUtf8(Utf8List),
+        #[prost(message, tag="24")]
+        List(ListList),
+        #[prost(message, tag="25")]
+        LargeList(ListList),
+    }
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TableRow {
+    #[prost(map="string, message", tag="1")]
+    pub values: ::std::collections::HashMap<::prost::alloc::string::String, TableScalar>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Table {
+    #[prost(map="string, message", tag="1")]
+    pub values: ::std::collections::HashMap<::prost::alloc::string::String, TableList>,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]

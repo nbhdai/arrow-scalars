@@ -6,3 +6,5 @@ mod list;
 pub use list::*;
 mod arrow_scalars;
 pub use crate::arrow_scalars::*;
+mod record_batch;
+pub use crate::record_batch::*;
