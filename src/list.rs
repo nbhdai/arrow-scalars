@@ -1370,10 +1370,9 @@ impl TableList {
                 values.values.push(*union);
                 values.set.push(true);
             }
-            (table_list::Values::Dictionary(_values), table_scalar::Value::Dictionary(dict)) => {
-                return Err(TableScalar {
-                    value: Some(table_scalar::Value::Dictionary(dict)),
-                });
+            (table_list::Values::Dictionary(values), table_scalar::Value::Dictionary(dict)) => {
+                values.values.as_mut().expect("valid proto").push(*dict)?;
+                values.set.push(true);
             }
             (_, val) => {
                 return Err(TableScalar { value: Some(val) });
