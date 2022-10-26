@@ -1,8 +1,6 @@
 use crate::data_type_proto::EmptyMessage;
-use crate::{
-    data_type_proto, FieldProto,
-};
-use crate::{DataTypeProto};
+use crate::DataTypeProto;
+use crate::{data_type_proto, FieldProto};
 use arrow::datatypes::*;
 
 impl DataTypeProto {
@@ -61,7 +59,8 @@ impl DataTypeProto {
                     .iter()
                     .map(|field| {
                         let name = field.name().to_owned();
-                        let data_type = Some(Box::new(DataTypeProto::from_arrow(field.data_type())));
+                        let data_type =
+                            Some(Box::new(DataTypeProto::from_arrow(field.data_type())));
                         FieldProto {
                             name,
                             data_type,
@@ -110,15 +109,17 @@ impl DataTypeProto {
             }
             DataType::Dictionary(key_type, value_type) => {
                 let key_type = Some(Box::new(DataTypeProto::from_arrow(key_type)));
-              let value_type = Some(Box::new(DataTypeProto::from_arrow(value_type)));
-              Some(data_type_proto::DataType::Dictionary(Box::new(
+                let value_type = Some(Box::new(DataTypeProto::from_arrow(value_type)));
+                Some(data_type_proto::DataType::Dictionary(Box::new(
                     data_type_proto::Dictionary {
                         key_type,
                         value_type,
                     },
                 )))
             }
-            DataType::FixedSizeBinary(size) => Some(data_type_proto::DataType::FixedSizeBinary(*size)),
+            DataType::FixedSizeBinary(size) => {
+                Some(data_type_proto::DataType::FixedSizeBinary(*size))
+            }
             DataType::Interval(interval_type) => match interval_type {
                 IntervalUnit::YearMonth => Some(data_type_proto::DataType::Interval(
                     data_type_proto::IntervalUnit::YearMonth.into(),
@@ -135,7 +136,8 @@ impl DataTypeProto {
                     .iter()
                     .map(|field| {
                         let name = field.name().to_owned();
-                        let data_type = Some(Box::new(DataTypeProto::from_arrow(field.data_type())));
+                        let data_type =
+                            Some(Box::new(DataTypeProto::from_arrow(field.data_type())));
                         FieldProto {
                             name,
                             data_type,
@@ -182,7 +184,9 @@ impl DataTypeProto {
             )),
             DataType::Map(struct_field, keys_sorted) => {
                 let name = struct_field.name().to_owned();
-                let data_type = Some(Box::new(DataTypeProto::from_arrow(struct_field.data_type())));
+                let data_type = Some(Box::new(DataTypeProto::from_arrow(
+                    struct_field.data_type(),
+                )));
                 let struct_field = Some(Box::new(FieldProto {
                     name,
                     data_type,

@@ -243,6 +243,7 @@ message TableList {
     message DictionaryList {
         TableList values = 1;
         DataTypeProto index_type = 2;
+        repeated bool set = 3;
     }
     message StructList {
         map<string,TableList> values = 1;

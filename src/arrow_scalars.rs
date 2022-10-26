@@ -433,6 +433,8 @@ pub mod table_list {
         pub values: ::core::option::Option<::prost::alloc::boxed::Box<super::TableList>>,
         #[prost(message, optional, tag="2")]
         pub index_type: ::core::option::Option<super::DataTypeProto>,
+        #[prost(bool, repeated, tag="3")]
+        pub set: ::prost::alloc::vec::Vec<bool>,
     }
     #[derive(Clone, PartialEq, ::prost::Message)]
     pub struct StructList {
