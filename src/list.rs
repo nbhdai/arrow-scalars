@@ -1366,10 +1366,9 @@ impl TableList {
                 values.values.push(b);
                 values.set.push(true);
             }
-            (table_list::Values::Union(_values), table_scalar::Value::Union(union)) => {
-                return Err(TableScalar {
-                    value: Some(table_scalar::Value::Union(union)),
-                });
+            (table_list::Values::Union(values), table_scalar::Value::Union(union)) => {
+                values.values.push(*union);
+                values.set.push(true);
             }
             (table_list::Values::Dictionary(_values), table_scalar::Value::Dictionary(dict)) => {
                 return Err(TableScalar {
