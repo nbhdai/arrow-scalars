@@ -3,7 +3,7 @@ pub struct FieldProto {
     #[prost(string, tag="1")]
     pub name: ::prost::alloc::string::String,
     #[prost(message, optional, boxed, tag="2")]
-    pub r#type: ::core::option::Option<::prost::alloc::boxed::Box<DataTypeProto>>,
+    pub data_type: ::core::option::Option<::prost::alloc::boxed::Box<DataTypeProto>>,
     #[prost(bool, tag="3")]
     pub nullable: bool,
 }
@@ -18,7 +18,7 @@ pub mod data_type_proto {
     pub struct EmptyMessage {
     }
     #[derive(Clone, PartialEq, ::prost::Message)]
-    pub struct TimestampInfo {
+    pub struct Timestamp {
         #[prost(enumeration="TimeUnit", tag="1")]
         pub unit: i32,
         #[prost(string, optional, tag="2")]
@@ -27,9 +27,9 @@ pub mod data_type_proto {
     #[derive(Clone, PartialEq, ::prost::Message)]
     pub struct FixedSizeList {
         #[prost(int32, tag="1")]
-        pub num_elements: i32,
+        pub size: i32,
         #[prost(message, optional, boxed, tag="2")]
-        pub field: ::core::option::Option<::prost::alloc::boxed::Box<super::FieldProto>>,
+        pub list_type: ::core::option::Option<::prost::alloc::boxed::Box<super::FieldProto>>,
     }
     #[derive(Clone, PartialEq, ::prost::Message)]
     pub struct Struct {
@@ -39,9 +39,9 @@ pub mod data_type_proto {
     #[derive(Clone, PartialEq, ::prost::Message)]
     pub struct Dictionary {
         #[prost(message, optional, boxed, tag="1")]
-        pub key: ::core::option::Option<::prost::alloc::boxed::Box<super::FieldProto>>,
+        pub key_type: ::core::option::Option<::prost::alloc::boxed::Box<super::DataTypeProto>>,
         #[prost(message, optional, boxed, tag="2")]
-        pub value: ::core::option::Option<::prost::alloc::boxed::Box<super::FieldProto>>,
+        pub value_type: ::core::option::Option<::prost::alloc::boxed::Box<super::DataTypeProto>>,
     }
     #[derive(Clone, PartialEq, ::prost::Message)]
     pub struct Union {
@@ -71,7 +71,7 @@ pub mod data_type_proto {
     #[derive(Clone, PartialEq, ::prost::Message)]
     pub struct Map {
         #[prost(message, optional, boxed, tag="1")]
-        pub r#struct: ::core::option::Option<::prost::alloc::boxed::Box<super::FieldProto>>,
+        pub struct_field: ::core::option::Option<::prost::alloc::boxed::Box<super::FieldProto>>,
         #[prost(bool, tag="2")]
         pub keys_sorted: bool,
     }
@@ -127,7 +127,7 @@ pub mod data_type_proto {
         #[prost(enumeration="TimeUnit", tag="17")]
         Time64(i32),
         #[prost(message, tag="18")]
-        Timestamp(TimestampInfo),
+        Timestamp(Timestamp),
         #[prost(enumeration="IntervalUnit", tag="19")]
         Interval(i32),
         #[prost(enumeration="TimeUnit", tag="20")]

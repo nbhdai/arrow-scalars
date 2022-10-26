@@ -1,12 +1,12 @@
-use crate::{ScalarValuable, TableRow, ArrowScalarError};
+use crate::{ArrowScalarError, ScalarValuable, TableRow};
 use arrow::record_batch::RecordBatch;
 
 pub trait RowValuable {
-    fn row_value(&self) -> Result<TableRow,ArrowScalarError>;
+    fn row_value(&self) -> Result<TableRow, ArrowScalarError>;
 }
 
 impl RowValuable for RecordBatch {
-    fn row_value(&self) -> Result<TableRow,ArrowScalarError> {
+    fn row_value(&self) -> Result<TableRow, ArrowScalarError> {
         let mut row = TableRow::default();
 
         let schema = self.schema();

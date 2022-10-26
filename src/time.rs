@@ -1,4 +1,4 @@
-use crate::{table_scalar, data_type_proto};
+use crate::{data_type_proto, table_scalar};
 use chrono::Timelike;
 
 use prost_types::Timestamp;

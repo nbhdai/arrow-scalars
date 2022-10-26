@@ -5,7 +5,7 @@ package arrow_scalars;
 
 message FieldProto {
   string name = 1;
-  DataTypeProto type = 2;
+  DataTypeProto data_type = 2;
   bool nullable = 3;
 }
 
@@ -17,7 +17,7 @@ message DataTypeProto {
         microsecond = 2;
         nanosecond = 3;
     }
-    message TimestampInfo {
+    message Timestamp {
         TimeUnit unit = 1;
         optional string tz = 2;
     }
@@ -27,15 +27,15 @@ message DataTypeProto {
         month_day_nano = 2;
     }
     message FixedSizeList {
-        int32 num_elements = 1;
-        FieldProto field = 2;
+        int32 size = 1;
+        FieldProto list_type = 2;
     }
     message Struct {
         repeated FieldProto fields = 1;
     }
     message Dictionary {
-        FieldProto key = 1;
-        FieldProto value = 2;
+        DataTypeProto key_type = 1;
+        DataTypeProto value_type = 2;
     }
     message Union {
         enum Mode {
@@ -51,7 +51,7 @@ message DataTypeProto {
         int32 scale = 2;
     }
     message Map {
-        FieldProto struct = 1;
+        FieldProto struct_field = 1;
         bool keys_sorted = 2;
     }
     oneof data_type {
@@ -74,7 +74,7 @@ message DataTypeProto {
         EmptyMessage date64 = 15;
         TimeUnit time32 = 16;
         TimeUnit time64 = 17;
-        TimestampInfo timestamp = 18;
+        Timestamp timestamp = 18;
         IntervalUnit interval = 19;
         TimeUnit duration = 20;
 

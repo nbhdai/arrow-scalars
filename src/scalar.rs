@@ -1,16 +1,16 @@
 use crate::list::ListValuable;
-use crate::{table_scalar, TableScalar, ArrowScalarError, data_type_proto};
+use crate::{data_type_proto, table_scalar, ArrowScalarError, TableScalar};
 use arrow::array::*;
 use arrow::datatypes::*;
 use std::collections::HashMap;
 use std::ops::Deref;
 
 pub trait ScalarValuable {
-    fn scalar(&self, i: usize) -> Result<TableScalar,ArrowScalarError>;
+    fn scalar(&self, i: usize) -> Result<TableScalar, ArrowScalarError>;
 }
 
 impl<T: Array> ScalarValuable for T {
-    fn scalar(&self, i: usize) -> Result<TableScalar,ArrowScalarError> {
+    fn scalar(&self, i: usize) -> Result<TableScalar, ArrowScalarError> {
         if self.is_null(i) {
             return Ok(TableScalar { value: None });
         }
@@ -178,7 +178,9 @@ impl<T: Array> ScalarValuable for T {
                         table_scalar::interval::Interval::MonthDayNano(value.to_vec())
                     }
                 };
-                let interval = table_scalar::Interval { interval: Some(value) };
+                let interval = table_scalar::Interval {
+                    interval: Some(value),
+                };
                 Some(table_scalar::Value::Interval(interval))
             }
             DataType::Duration(unit) => {
@@ -208,13 +210,15 @@ impl<T: Array> ScalarValuable for T {
             }
             DataType::Struct(_) => {
                 let arrays = as_struct_array(self);
-                let elements: Result<HashMap<String,TableScalar>, ArrowScalarError> = arrays
+                let elements: Result<HashMap<String, TableScalar>, ArrowScalarError> = arrays
                     .columns()
                     .iter()
                     .zip(arrays.column_names())
                     .map(|(arr, str)| Ok((str.to_string(), arr.scalar(i)?)))
                     .collect();
-                let value = table_scalar::Struct { elements: elements? };
+                let value = table_scalar::Struct {
+                    elements: elements?,
+                };
                 Some(table_scalar::Value::Struct(value))
             }
             DataType::Dictionary(key_type, _) => {
@@ -289,25 +293,25 @@ impl<T: Array> ScalarValuable for T {
                 Some(table_scalar::Value::FixedSizeList(value))
             }
             // Unsupported types
-            DataType::Union(_,_,_) => {
+            DataType::Union(_, _, _) => {
                 return Err(ArrowScalarError::Unimplemented(
                     "Array::scalar".to_string(),
                     "Union".to_string(),
                 ));
             }
-            DataType::Decimal128(_,_) => {
+            DataType::Decimal128(_, _) => {
                 return Err(ArrowScalarError::Unimplemented(
                     "Array::scalar".to_string(),
                     "Decimal128".to_string(),
                 ));
             }
-            DataType::Decimal256(_,_) => {
+            DataType::Decimal256(_, _) => {
                 return Err(ArrowScalarError::Unimplemented(
                     "Array::scalar".to_string(),
                     "Decimal256".to_string(),
                 ));
             }
-            DataType::Map(_,_) => {
+            DataType::Map(_, _) => {
                 return Err(ArrowScalarError::Unimplemented(
                     "Array::scalar".to_string(),
                     "Map".to_string(),
@@ -320,7 +324,7 @@ impl<T: Array> ScalarValuable for T {
 
 #[cfg(test)]
 pub mod tests {
-    use std::{sync::Arc, collections::HashMap};
+    use std::{collections::HashMap, sync::Arc};
 
     use crate::{table_list, TableList};
 
@@ -504,13 +508,19 @@ pub mod tests {
         let struct_array = StructArray::from(schema);
         let first_scalar = table_scalar::Struct {
             elements: HashMap::from([
-                ("bo".to_owned(),TableScalar {
-                    value: Some(table_scalar::Value::Boolean(false)),
-                }),
-                ("fl".to_owned(),TableScalar {
-                    value: Some(table_scalar::Value::Float64(2.0)),
-                }),
-                ("list".to_owned(),TableScalar { value: None }),
+                (
+                    "bo".to_owned(),
+                    TableScalar {
+                        value: Some(table_scalar::Value::Boolean(false)),
+                    },
+                ),
+                (
+                    "fl".to_owned(),
+                    TableScalar {
+                        value: Some(table_scalar::Value::Float64(2.0)),
+                    },
+                ),
+                ("list".to_owned(), TableScalar { value: None }),
             ]),
         };
         let list_entries = table_list::Int32List {
@@ -522,13 +532,19 @@ pub mod tests {
         };
         let second_scalar = table_scalar::Struct {
             elements: HashMap::from([
-                ("bo".to_owned(),TableScalar { value: None }),
-                ("b1".to_owned(),TableScalar {
-                    value: Some(table_scalar::Value::Float64(0.0)),
-                }),
-                ("list".to_owned(),TableScalar {
-                    value: Some(table_scalar::Value::List(list_value)),
-                }),
+                ("bo".to_owned(), TableScalar { value: None }),
+                (
+                    "b1".to_owned(),
+                    TableScalar {
+                        value: Some(table_scalar::Value::Float64(0.0)),
+                    },
+                ),
+                (
+                    "list".to_owned(),
+                    TableScalar {
+                        value: Some(table_scalar::Value::List(list_value)),
+                    },
+                ),
             ]),
         };
 
