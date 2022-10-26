@@ -418,7 +418,7 @@ pub mod table_list {
         #[prost(bool, repeated, tag="2")]
         pub set: ::prost::alloc::vec::Vec<bool>,
         #[prost(int32, optional, tag="3")]
-        pub len: ::core::option::Option<i32>,
+        pub size: ::core::option::Option<i32>,
     }
     #[derive(Clone, PartialEq, ::prost::Message)]
     pub struct Utf8List {
@@ -457,7 +457,7 @@ pub mod table_list {
         #[prost(message, optional, tag="3")]
         pub list_type: ::core::option::Option<super::DataTypeProto>,
         #[prost(int32, optional, tag="4")]
-        pub len: ::core::option::Option<i32>,
+        pub size: ::core::option::Option<i32>,
     }
     #[derive(Clone, PartialEq, ::prost::Oneof)]
     pub enum Values {

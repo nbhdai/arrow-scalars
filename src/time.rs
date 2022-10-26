@@ -298,7 +298,7 @@ pub mod tests {
             time: 0,
             tz: None,
         };
-        time_base.time = datetime_1.timestamp_millis() as i64;
+        time_base.time = datetime_1.timestamp_millis();
         assert_eq!(
             array.scalar(0).unwrap(),
             TableScalar {
@@ -306,7 +306,7 @@ pub mod tests {
             }
         );
         assert_eq!(array.value_as_datetime(0), Some(datetime_1));
-        time_base.time = datetime_2.timestamp_millis() as i64;
+        time_base.time = datetime_2.timestamp_millis();
         assert_eq!(
             array.scalar(1).unwrap(),
             TableScalar {
@@ -315,14 +315,14 @@ pub mod tests {
         );
 
         assert_eq!(array.scalar(2).unwrap(), TableScalar { value: None });
-        time_base.time = datetime_3.timestamp_millis() as i64;
+        time_base.time = datetime_3.timestamp_millis();
         assert_eq!(
             array.scalar(3).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Timestamp(time_base.clone()))
             }
         );
-        time_base.time = datetime_4.timestamp_millis() as i64;
+        time_base.time = datetime_4.timestamp_millis();
         assert_eq!(
             array.scalar(4).unwrap(),
             TableScalar {

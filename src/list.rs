@@ -276,7 +276,7 @@ impl<T: Array> ListValuable for T {
                     values,
                     set,
                     list_type: list_type.into(),
-                    len: None,
+                    size: None,
                 }))
             }
             DataType::LargeList(list_type) => {
@@ -297,7 +297,7 @@ impl<T: Array> ListValuable for T {
                     values,
                     set,
                     list_type: list_type.into(),
-                    len: None,
+                    size: None,
                 }))
             }
             DataType::FixedSizeList(list_type, len) => {
@@ -318,7 +318,7 @@ impl<T: Array> ListValuable for T {
                     values,
                     set,
                     list_type: list_type.into(),
-                    len: Some(*len),
+                    size: Some(*len),
                 }))
             }
             DataType::Timestamp(time_unit, tz) => match time_unit {
@@ -508,7 +508,7 @@ impl<T: Array> ListValuable for T {
                 let binary_list = table_list::BinaryList {
                     values,
                     set,
-                    len: None,
+                    size: None,
                 };
                 Some(table_list::Values::Binary(binary_list))
             }
@@ -527,7 +527,7 @@ impl<T: Array> ListValuable for T {
                 let binary_list = table_list::BinaryList {
                     values,
                     set,
-                    len: None,
+                    size: None,
                 };
                 Some(table_list::Values::Binary(binary_list))
             }
@@ -549,7 +549,7 @@ impl<T: Array> ListValuable for T {
                 let binary_list = table_list::BinaryList {
                     values,
                     set,
-                    len: Some(*size),
+                    size: Some(*size),
                 };
                 Some(table_list::Values::Binary(binary_list))
             }
@@ -560,9 +560,9 @@ impl<T: Array> ListValuable for T {
                     let mut set = Vec::with_capacity(array.len());
                     for i in 0..array.len() {
                         if !array.is_null(i) {
-                            durations.push(array.value(i) as i64);
+                            durations.push(array.value(i));
                         } else {
-                            durations.push(DurationSecondType::default_value() as i64);
+                            durations.push(DurationSecondType::default_value());
                         }
                         set.push(!array.is_null(i));
                     }
@@ -579,9 +579,9 @@ impl<T: Array> ListValuable for T {
                     let mut set = Vec::with_capacity(array.len());
                     for i in 0..array.len() {
                         if !array.is_null(i) {
-                            durations.push(array.value(i) as i64);
+                            durations.push(array.value(i));
                         } else {
-                            durations.push(DurationMillisecondType::default_value() as i64);
+                            durations.push(DurationMillisecondType::default_value());
                         }
                         set.push(!array.is_null(i));
                     }
@@ -598,9 +598,9 @@ impl<T: Array> ListValuable for T {
                     let mut set = Vec::with_capacity(array.len());
                     for i in 0..array.len() {
                         if !array.is_null(i) {
-                            durations.push(array.value(i) as i64);
+                            durations.push(array.value(i));
                         } else {
-                            durations.push(DurationMicrosecondType::default_value() as i64);
+                            durations.push(DurationMicrosecondType::default_value());
                         }
                         set.push(!array.is_null(i));
                     }
@@ -617,9 +617,9 @@ impl<T: Array> ListValuable for T {
                     let mut set = Vec::with_capacity(array.len());
                     for i in 0..array.len() {
                         if !array.is_null(i) {
-                            durations.push(array.value(i) as i64);
+                            durations.push(array.value(i));
                         } else {
-                            durations.push(DurationNanosecondType::default_value() as i64);
+                            durations.push(DurationNanosecondType::default_value());
                         }
                         set.push(!array.is_null(i));
                     }
@@ -657,9 +657,9 @@ impl<T: Array> ListValuable for T {
                     let mut set = Vec::with_capacity(array.len());
                     for i in 0..array.len() {
                         if !array.is_null(i) {
-                            intervals.push(array.value(i) as i64);
+                            intervals.push(array.value(i));
                         } else {
-                            intervals.push(IntervalDayTimeType::default_value() as i64);
+                            intervals.push(IntervalDayTimeType::default_value());
                         }
                         set.push(!array.is_null(i));
                     }
@@ -1375,7 +1375,7 @@ impl TableList {
                     values,
                     set,
                     list_type: _,
-                    len: _,
+                    size: _,
                 }) => {
                     values.push(TableList::default());
                     set.push(false);
@@ -1618,7 +1618,7 @@ impl TableList {
                 let arrays = struct_list
                     .values
                     .iter()
-                    .map(|(name,list)| Ok((Field::new(name, list.data_type().clone(), false), list.to_array()?)))
+                    .map(|(name,list)| Ok((Field::new(name, list.data_type(), false), list.to_array()?)))
                     .collect::<Result<Vec<_>, ArrowScalarError>>()?;
                 Arc::new(StructArray::from(arrays))
             }
@@ -1659,13 +1659,13 @@ impl TableList {
                 values,
                 set: _,
                 list_type: _,
-                len: _,
+                size: _,
             }) => values.len(),
             table_list::Values::LargeList(table_list::ListList {
                 values,
                 set: _,
                 list_type: _,
-                len: _,
+                size: _,
             }) => values.len(),
             _ => unimplemented!(),
         }
