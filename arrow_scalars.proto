@@ -234,7 +234,7 @@ message TableList {
     message BinaryList {
         repeated bytes values = 1;
         repeated bool set = 2;
-        optional int32 len = 3;
+        optional int32 size = 3;
     }
     message Utf8List {
         repeated string values = 1;
@@ -256,7 +256,7 @@ message TableList {
         repeated TableList values = 1;
         repeated bool set = 2;
         DataTypeProto list_type = 3;
-        optional int32 len = 4;
+        optional int32 size = 4;
     }
 
     oneof values {
