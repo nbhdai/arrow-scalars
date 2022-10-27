@@ -33,7 +33,7 @@ impl RowValuable for Table {
 impl Table {
     fn roll_back(&mut self, elements: Vec<String>, mut row: TableRow) -> TableRow {
         for element in elements {
-            if let Some(value) = self.values.get_mut(&element).map(|values| values.pop()).flatten() {
+            if let Some(value) = self.values.get_mut(&element).and_then(|values| values.pop()) {
                 row.values.insert(element.to_string(), value);
             }
         }
