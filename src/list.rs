@@ -1085,6 +1085,14 @@ impl<'a, T: Iterator> Iterator for TableListIter<'a, T> {
     }
 }
 
+fn pop_value_ret(value: Option<table_scalar::Value>, set: Option<bool>) -> Option<table_scalar::Value> {
+                match (value, set) {
+                    (Some(val), Some(true)) => Some(val),
+                    (Some(_val), Some(false)) => None,
+                    _ => return None,
+                }
+}
+
 impl TableList {
     pub fn push(&mut self, scalar: TableScalar) -> Result<(), TableScalar> {
         if self.values.is_none() {
@@ -1385,6 +1393,265 @@ impl TableList {
             }
         }
         Ok(())
+    }
+
+    pub fn pop(&mut self) -> Option<TableScalar> {
+        if self.values.is_none() {
+            return None;
+        }
+        let value = match self.values.as_mut().unwrap() {
+            table_list::Values::Boolean(table_list::BooleanList { values, set }) => {
+                let value = values.pop().map(|val| table_scalar::Value::Boolean(val));
+                let set = set.pop();
+                pop_value_ret(value, set)
+            },
+            table_list::Values::Int8(table_list::Int8List { values, set }) => {
+                let value = values.pop().map(|val| table_scalar::Value::Int8(val));
+                let set = set.pop();
+                pop_value_ret(value, set)
+            },
+            table_list::Values::Int16(table_list::Int16List { values, set }) => {
+                let value = values.pop().map(|val| table_scalar::Value::Int16(val));
+                let set = set.pop();
+                pop_value_ret(value, set)
+            },
+            table_list::Values::Int32(table_list::Int32List { values, set }) => {
+                let value = values.pop().map(|val| table_scalar::Value::Int32(val));
+                let set = set.pop();
+                pop_value_ret(value, set)
+            },
+            table_list::Values::Int64(table_list::Int64List { values, set }) => {
+                let value = values.pop().map(|val| table_scalar::Value::Int64(val));
+                let set = set.pop();
+                pop_value_ret(value, set)
+            },
+            table_list::Values::Uint8(table_list::UInt8List { values, set }) => {
+                let value = values.pop().map(|val| table_scalar::Value::Uint8(val));
+                let set = set.pop();
+                pop_value_ret(value, set)
+            },
+            table_list::Values::Uint16(table_list::UInt16List { values, set }) => {
+                let value = values.pop().map(|val| table_scalar::Value::Uint16(val));
+                let set = set.pop();
+                pop_value_ret(value, set)
+            },
+            table_list::Values::Uint32(table_list::UInt32List { values, set }) => {
+                let value = values.pop().map(|val| table_scalar::Value::Uint32(val));
+                let set = set.pop();
+                pop_value_ret(value, set)
+            },
+            table_list::Values::Uint64(table_list::UInt64List { values, set }) => {
+                let value = values.pop().map(|val| table_scalar::Value::Uint64(val));
+                let set = set.pop();
+                pop_value_ret(value, set)
+            },
+            table_list::Values::Float16(table_list::Float16List { values, set }) => {
+                let value = values.pop().map(|val| table_scalar::Value::Float16(val));
+                let set = set.pop();
+                pop_value_ret(value, set)
+            },
+            table_list::Values::Float32(table_list::Float32List { values, set }) => {
+                let value = values.pop().map(|val| table_scalar::Value::Float32(val));
+                let set = set.pop();
+                pop_value_ret(value, set)
+            },
+            table_list::Values::Float64(table_list::Float64List { values, set }) => {
+                let value = values.pop().map(|val| table_scalar::Value::Float64(val));
+                let set = set.pop();
+                pop_value_ret(value, set)
+            },
+            table_list::Values::Utf8(table_list::Utf8List { values, set }) => {
+                let value = values.pop().map(|val| table_scalar::Value::Utf8(val));
+                let set = set.pop();
+                pop_value_ret(value, set)
+            },
+            table_list::Values::LargeUtf8(table_list::Utf8List { values, set }) => {
+                let value = values.pop().map(|val| table_scalar::Value::LargeUtf8(val));
+                let set = set.pop();
+                pop_value_ret(value, set)
+            },
+            table_list::Values::List(table_list::ListList {
+                values,
+                set,
+                list_type: _,
+                size: _,
+            }) => {
+                let value = values.pop().map(|val| table_scalar::Value::List(val));
+                let set = set.pop();
+                pop_value_ret(value, set)
+            },
+            table_list::Values::LargeList(table_list::ListList {
+                values,
+                set,
+                list_type: _,
+                size: _,
+            }) => {
+                let value = values.pop().map(|val| table_scalar::Value::LargeList(val));
+                let set = set.pop();
+                pop_value_ret(value, set)
+            },
+            table_list::Values::FixedSizeList(table_list::ListList {
+                values,
+                set,
+                list_type: _,
+                size: _,
+            }) => {
+                let value = values.pop().map(|val| table_scalar::Value::FixedSizeList(val));
+                let set = set.pop();
+                pop_value_ret(value, set)
+            },
+            table_list::Values::Binary(table_list::BinaryList {
+                values,
+                set,
+                size: _,
+            }) => {
+                let value = values.pop().map(|val| table_scalar::Value::Binary(val));
+                let set = set.pop();
+                pop_value_ret(value, set)
+            },
+            table_list::Values::LargeBinary(table_list::BinaryList {
+                values,
+                set,
+                size: _,
+            }) => {
+                let value = values.pop().map(|val| table_scalar::Value::LargeBinary(val));
+                let set = set.pop();
+                pop_value_ret(value, set)
+            },
+            table_list::Values::FixedSizeBinary(table_list::BinaryList {
+                values,
+                set,
+                size: _,
+            }) => {
+                let value = values.pop().map(|val| table_scalar::Value::FixedSizeBinary(val));
+                let set = set.pop();
+                pop_value_ret(value, set)
+            },
+            table_list::Values::Struct(table_list::StructList { values, set }) => {
+                //todo!("Make this resilient")
+                if Some(true) == set.pop() {
+                    let elements: HashMap<String, TableScalar> = values.iter_mut().map(|(field, values)| {
+                        (field.to_owned(), values.pop().unwrap())
+                    }).collect();
+                    Some(table_scalar::Value::Struct(table_scalar::Struct { elements }))
+                } else {
+                    None
+                }
+            },
+            table_list::Values::Union(table_list::UnionList { values, set }) => {
+                let value = values.pop().map(|val| table_scalar::Value::Union(Box::new(val)));
+                let set = set.pop();
+                pop_value_ret(value, set)
+            }
+            table_list::Values::Dictionary(dict) => {
+                let table_list::DictionaryList {
+                    values,
+                    index_type: _,
+                    set,
+                } = dict.as_mut();
+                let value = values.as_mut().map(|v| v.pop().map(|val| table_scalar::Value::Dictionary(Box::new(val)))).flatten();
+                let set = set.pop();
+                pop_value_ret(value, set)
+            }
+            table_list::Values::Time32(table_list::TimeList {
+                times,
+                unit,
+                tz,
+                set,
+            }) => {
+                let value = times.pop().map(|time| {
+                    table_scalar::Value::Time32(table_scalar::Time {
+                        unit: *unit,
+                        time,
+                        tz: tz.to_owned(),
+                    })
+                });
+                let set = set.pop();
+                pop_value_ret(value, set)
+            }
+            table_list::Values::Time64(table_list::TimeList {
+                times,
+                unit,
+                tz,
+                set,
+            }) => {
+                let value = times.pop().map(|time| {
+                    table_scalar::Value::Time64(table_scalar::Time {
+                        unit: *unit,
+                        time,
+                        tz: tz.to_owned(),
+                    })
+                });
+                let set = set.pop();
+                pop_value_ret(value, set)
+            }
+            table_list::Values::Timestamp(table_list::TimeList {
+                times,
+                unit,
+                tz,
+                set,
+            }) => {
+                let value = times.pop().map(|time| {
+                    table_scalar::Value::Timestamp(table_scalar::Time {
+                        unit: *unit,
+                        time,
+                        tz: tz.to_owned(),
+                    })
+                });
+                let set = set.pop();
+                pop_value_ret(value, set)
+            }
+            table_list::Values::Date32(table_list::Int32List { values, set }) => {
+                let value = values.pop().map(|val| table_scalar::Value::Date32(val));
+                let set = set.pop();
+                pop_value_ret(value, set)
+            }
+            table_list::Values::Date64(table_list::Int64List { values, set }) => {
+                let value = values.pop().map(|val| table_scalar::Value::Date64(val));
+                let set = set.pop();
+                pop_value_ret(value, set)
+            }
+            table_list::Values::Interval(table_list::IntervalList {
+                intervals,
+                unit,
+                set,
+            }) => {
+                let interval = match data_type_proto::IntervalUnit::from_i32(*unit) {
+                    None | Some(data_type_proto::IntervalUnit::MonthDayNano) => return None,
+                    Some(data_type_proto::IntervalUnit::YearMonth) => data_type_proto::IntervalUnit::YearMonth,
+                    Some(data_type_proto::IntervalUnit::DayTime) => data_type_proto::IntervalUnit::DayTime,
+                };
+                // todo: repair this
+                let value = intervals.pop().map(|time| {
+                    let interval = match interval {
+                        data_type_proto::IntervalUnit::YearMonth => table_scalar::interval::Interval::YearMonth(time as i32),
+                        data_type_proto::IntervalUnit::DayTime => table_scalar::interval::Interval::DayTime(time),
+                        _ => unreachable!(),
+                    };
+                    table_scalar::Value::Interval(table_scalar::Interval {
+                        interval: Some(interval),
+                    })
+                });
+                let set = set.pop();
+                pop_value_ret(value, set)
+            },
+            table_list::Values::Duration(table_list::DurationList {
+                durations,
+                unit,
+                set,
+            }) => {
+                let value = durations.pop().map(|duration| {
+                    table_scalar::Value::Duration(table_scalar::Duration {
+                        duration,
+                        unit: *unit,
+                    })
+                });
+                let set = set.pop();
+                pop_value_ret(value, set)
+            }
+        };
+    
+        Some(TableScalar { value })
     }
 
     pub fn push_null(&mut self) {

@@ -322,6 +322,12 @@ impl<T: Array> ScalarValuable for T {
     }
 }
 
+impl TableScalar {
+    pub fn data_type(&self) -> DataType {
+        todo!()
+    }
+}
+
 #[cfg(test)]
 pub mod tests {
     use std::{collections::HashMap, sync::Arc};
