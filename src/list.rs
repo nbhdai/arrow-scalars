@@ -1395,6 +1395,7 @@ impl TableList {
         Ok(())
     }
 
+    //todo! test this
     pub fn pop(&mut self) -> Option<TableScalar> {
         self.values.as_ref()?;
         let value = match self.values.as_mut().unwrap() {

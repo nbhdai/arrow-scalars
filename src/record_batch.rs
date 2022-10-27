@@ -38,7 +38,8 @@ impl Table {
             }
         }
         row
-    } 
+    }
+    // todo test this
     pub fn push(&mut self, mut row: TableRow) -> Result<(), TableRow> {
         let mut roll_back: Vec<String> = Vec::with_capacity(self.values.len());
         for (key, column) in self.values.iter_mut() {
