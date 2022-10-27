@@ -1086,11 +1086,11 @@ impl<'a, T: Iterator> Iterator for TableListIter<'a, T> {
 }
 
 fn pop_value_ret(value: Option<table_scalar::Value>, set: Option<bool>) -> Option<table_scalar::Value> {
-                match (value, set) {
-                    (Some(val), Some(true)) => Some(val),
-                    (Some(_val), Some(false)) => None,
-                    _ => return None,
-                }
+    match (value, set) {
+        (Some(val), Some(true)) => Some(val),
+        (Some(_val), Some(false)) => None,
+        _ => None,
+    }
 }
 
 impl TableList {
@@ -1396,77 +1396,75 @@ impl TableList {
     }
 
     pub fn pop(&mut self) -> Option<TableScalar> {
-        if self.values.is_none() {
-            return None;
-        }
+        self.values.as_ref()?;
         let value = match self.values.as_mut().unwrap() {
             table_list::Values::Boolean(table_list::BooleanList { values, set }) => {
-                let value = values.pop().map(|val| table_scalar::Value::Boolean(val));
+                let value = values.pop().map(table_scalar::Value::Boolean);
                 let set = set.pop();
                 pop_value_ret(value, set)
             },
             table_list::Values::Int8(table_list::Int8List { values, set }) => {
-                let value = values.pop().map(|val| table_scalar::Value::Int8(val));
+                let value = values.pop().map(table_scalar::Value::Int8);
                 let set = set.pop();
                 pop_value_ret(value, set)
             },
             table_list::Values::Int16(table_list::Int16List { values, set }) => {
-                let value = values.pop().map(|val| table_scalar::Value::Int16(val));
+                let value = values.pop().map(table_scalar::Value::Int16);
                 let set = set.pop();
                 pop_value_ret(value, set)
             },
             table_list::Values::Int32(table_list::Int32List { values, set }) => {
-                let value = values.pop().map(|val| table_scalar::Value::Int32(val));
+                let value = values.pop().map(table_scalar::Value::Int32);
                 let set = set.pop();
                 pop_value_ret(value, set)
             },
             table_list::Values::Int64(table_list::Int64List { values, set }) => {
-                let value = values.pop().map(|val| table_scalar::Value::Int64(val));
+                let value = values.pop().map(table_scalar::Value::Int64);
                 let set = set.pop();
                 pop_value_ret(value, set)
             },
             table_list::Values::Uint8(table_list::UInt8List { values, set }) => {
-                let value = values.pop().map(|val| table_scalar::Value::Uint8(val));
+                let value = values.pop().map(table_scalar::Value::Uint8);
                 let set = set.pop();
                 pop_value_ret(value, set)
             },
             table_list::Values::Uint16(table_list::UInt16List { values, set }) => {
-                let value = values.pop().map(|val| table_scalar::Value::Uint16(val));
+                let value = values.pop().map(table_scalar::Value::Uint16);
                 let set = set.pop();
                 pop_value_ret(value, set)
             },
             table_list::Values::Uint32(table_list::UInt32List { values, set }) => {
-                let value = values.pop().map(|val| table_scalar::Value::Uint32(val));
+                let value = values.pop().map(table_scalar::Value::Uint32);
                 let set = set.pop();
                 pop_value_ret(value, set)
             },
             table_list::Values::Uint64(table_list::UInt64List { values, set }) => {
-                let value = values.pop().map(|val| table_scalar::Value::Uint64(val));
+                let value = values.pop().map(table_scalar::Value::Uint64);
                 let set = set.pop();
                 pop_value_ret(value, set)
             },
             table_list::Values::Float16(table_list::Float16List { values, set }) => {
-                let value = values.pop().map(|val| table_scalar::Value::Float16(val));
+                let value = values.pop().map(table_scalar::Value::Float16);
                 let set = set.pop();
                 pop_value_ret(value, set)
             },
             table_list::Values::Float32(table_list::Float32List { values, set }) => {
-                let value = values.pop().map(|val| table_scalar::Value::Float32(val));
+                let value = values.pop().map(table_scalar::Value::Float32);
                 let set = set.pop();
                 pop_value_ret(value, set)
             },
             table_list::Values::Float64(table_list::Float64List { values, set }) => {
-                let value = values.pop().map(|val| table_scalar::Value::Float64(val));
+                let value = values.pop().map(table_scalar::Value::Float64);
                 let set = set.pop();
                 pop_value_ret(value, set)
             },
             table_list::Values::Utf8(table_list::Utf8List { values, set }) => {
-                let value = values.pop().map(|val| table_scalar::Value::Utf8(val));
+                let value = values.pop().map(table_scalar::Value::Utf8);
                 let set = set.pop();
                 pop_value_ret(value, set)
             },
             table_list::Values::LargeUtf8(table_list::Utf8List { values, set }) => {
-                let value = values.pop().map(|val| table_scalar::Value::LargeUtf8(val));
+                let value = values.pop().map(table_scalar::Value::LargeUtf8);
                 let set = set.pop();
                 pop_value_ret(value, set)
             },
@@ -1476,7 +1474,7 @@ impl TableList {
                 list_type: _,
                 size: _,
             }) => {
-                let value = values.pop().map(|val| table_scalar::Value::List(val));
+                let value = values.pop().map(table_scalar::Value::List);
                 let set = set.pop();
                 pop_value_ret(value, set)
             },
@@ -1486,7 +1484,7 @@ impl TableList {
                 list_type: _,
                 size: _,
             }) => {
-                let value = values.pop().map(|val| table_scalar::Value::LargeList(val));
+                let value = values.pop().map(table_scalar::Value::LargeList);
                 let set = set.pop();
                 pop_value_ret(value, set)
             },
@@ -1496,7 +1494,7 @@ impl TableList {
                 list_type: _,
                 size: _,
             }) => {
-                let value = values.pop().map(|val| table_scalar::Value::FixedSizeList(val));
+                let value = values.pop().map(table_scalar::Value::FixedSizeList);
                 let set = set.pop();
                 pop_value_ret(value, set)
             },
@@ -1505,7 +1503,7 @@ impl TableList {
                 set,
                 size: _,
             }) => {
-                let value = values.pop().map(|val| table_scalar::Value::Binary(val));
+                let value = values.pop().map(table_scalar::Value::Binary);
                 let set = set.pop();
                 pop_value_ret(value, set)
             },
@@ -1514,7 +1512,7 @@ impl TableList {
                 set,
                 size: _,
             }) => {
-                let value = values.pop().map(|val| table_scalar::Value::LargeBinary(val));
+                let value = values.pop().map(table_scalar::Value::LargeBinary);
                 let set = set.pop();
                 pop_value_ret(value, set)
             },
@@ -1523,7 +1521,7 @@ impl TableList {
                 set,
                 size: _,
             }) => {
-                let value = values.pop().map(|val| table_scalar::Value::FixedSizeBinary(val));
+                let value = values.pop().map(table_scalar::Value::FixedSizeBinary);
                 let set = set.pop();
                 pop_value_ret(value, set)
             },
@@ -1549,7 +1547,7 @@ impl TableList {
                     index_type: _,
                     set,
                 } = dict.as_mut();
-                let value = values.as_mut().map(|v| v.pop().map(|val| table_scalar::Value::Dictionary(Box::new(val)))).flatten();
+                let value = values.as_mut().and_then(|v| v.pop().map(|val| table_scalar::Value::Dictionary(Box::new(val))));
                 let set = set.pop();
                 pop_value_ret(value, set)
             }
@@ -1602,12 +1600,12 @@ impl TableList {
                 pop_value_ret(value, set)
             }
             table_list::Values::Date32(table_list::Int32List { values, set }) => {
-                let value = values.pop().map(|val| table_scalar::Value::Date32(val));
+                let value = values.pop().map(table_scalar::Value::Date32);
                 let set = set.pop();
                 pop_value_ret(value, set)
             }
             table_list::Values::Date64(table_list::Int64List { values, set }) => {
-                let value = values.pop().map(|val| table_scalar::Value::Date64(val));
+                let value = values.pop().map(table_scalar::Value::Date64);
                 let set = set.pop();
                 pop_value_ret(value, set)
             }
