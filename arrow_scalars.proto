@@ -256,7 +256,7 @@ message TableList {
     message ListList {
         repeated TableList values = 1;
         repeated bool set = 2;
-        DataTypeProto list_type = 3;
+        FieldProto list_type = 3;
         optional int32 size = 4;
     }
 

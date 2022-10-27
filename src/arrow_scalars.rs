@@ -457,7 +457,7 @@ pub mod table_list {
         #[prost(bool, repeated, tag="2")]
         pub set: ::prost::alloc::vec::Vec<bool>,
         #[prost(message, optional, tag="3")]
-        pub list_type: ::core::option::Option<super::DataTypeProto>,
+        pub list_type: ::core::option::Option<super::FieldProto>,
         #[prost(int32, optional, tag="4")]
         pub size: ::core::option::Option<i32>,
     }

@@ -2,8 +2,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::table_scalar::{Duration, Time};
-use crate::{data_type_proto, table_list, table_scalar, ArrowScalarError, TableList, TableScalar};
-use crate::{DataTypeProto, ScalarValuable};
+use crate::{data_type_proto, table_list, table_scalar, ArrowScalarError, TableList, TableScalar, FieldProto};
+use crate::ScalarValuable;
 use arrow::array::*;
 use arrow::datatypes::*;
 use half::f16;
@@ -257,7 +257,7 @@ impl<T: Array> ListValuable for T {
                 Some(table_list::Values::LargeUtf8(list))
             }
             DataType::List(list_type) => {
-                let list_type = DataTypeProto::from_arrow(list_type.data_type());
+                let list_type = Some(FieldProto::from_arrow(list_type));
                 let array = as_list_array(self);
                 let mut values = Vec::with_capacity(array.len());
                 let mut set = Vec::with_capacity(array.len());
@@ -273,12 +273,12 @@ impl<T: Array> ListValuable for T {
                 Some(table_list::Values::List(table_list::ListList {
                     values,
                     set,
-                    list_type: list_type.into(),
+                    list_type,
                     size: None,
                 }))
             }
             DataType::LargeList(list_type) => {
-                let list_type = DataTypeProto::from_arrow(list_type.data_type());
+                let list_type = Some(FieldProto::from_arrow(list_type));
                 let array = as_list_array(self);
                 let mut values = Vec::with_capacity(array.len());
                 let mut set = Vec::with_capacity(array.len());
@@ -294,12 +294,12 @@ impl<T: Array> ListValuable for T {
                 Some(table_list::Values::LargeList(table_list::ListList {
                     values,
                     set,
-                    list_type: list_type.into(),
+                    list_type,
                     size: None,
                 }))
             }
             DataType::FixedSizeList(list_type, len) => {
-                let list_type = DataTypeProto::from_arrow(list_type.data_type());
+                let list_type = Some(FieldProto::from_arrow(list_type));
                 let array = as_list_array(self);
                 let mut values = Vec::with_capacity(array.len());
                 let mut set = Vec::with_capacity(array.len());
@@ -315,7 +315,7 @@ impl<T: Array> ListValuable for T {
                 Some(table_list::Values::FixedSizeList(table_list::ListList {
                     values,
                     set,
-                    list_type: list_type.into(),
+                    list_type,
                     size: Some(*len),
                 }))
             }
@@ -1295,13 +1295,19 @@ impl TableList {
                 set.push(true);
             }
             (table_list::Values::List(values), table_scalar::Value::List(list)) => {
-                return values.push(list);
+                if let Err(list) = values.push(list) {
+                    return Err(TableScalar { value: Some(table_scalar::Value::List(list))});
+                }
             }
             (table_list::Values::LargeList(values), table_scalar::Value::List(list)) => {
-                return values.push(list);
+                if let Err(list) = values.push(list) {
+                    return Err(TableScalar { value: Some(table_scalar::Value::List(list))});
+                }
             }
             (table_list::Values::FixedSizeList(values), table_scalar::Value::List(list)) => {
-                return values.push(list);
+                if let Err(list) = values.push(list) {
+                    return Err(TableScalar { value: Some(table_scalar::Value::List(list))});
+                }
             }
             (table_list::Values::Struct(struct_list), table_scalar::Value::Struct(mut values)) => {
                 if struct_list.values.len() == values.elements.len() && struct_list.values.keys().all(|k| values.elements.contains_key(k)) {
@@ -1622,40 +1628,50 @@ impl TableList {
                 }
             }
             table_list::Values::List(list_list) => {
+                if list_list.list_type.is_none() {
+                    return Err(ArrowScalarError::InvalidProtobuf);
+                }
                 let list_type = list_list.list_type.as_ref().unwrap();
-                let list_data_type = list_type.data_type.as_ref();
+                if list_type.data_type.is_none() {
+                    return Err(ArrowScalarError::InvalidProtobuf);
+                }
+                let list_data_type = list_type.data_type.as_ref().unwrap();
+                if list_data_type.data_type.is_none() {
+                    return Err(ArrowScalarError::InvalidProtobuf);
+                }
+                let list_data_type = list_data_type.data_type.as_ref().unwrap();
                 match list_data_type {
-                    Some(data_type_proto::DataType::Int8(_)) => {
+                    data_type_proto::DataType::Int8(_) => {
                         primitive_list_list_builder_int8(list_list)
                     }
-                    Some(data_type_proto::DataType::Int16(_)) => {
+                    data_type_proto::DataType::Int16(_) => {
                         primitive_list_list_builder_int16(list_list)
                     }
-                    Some(data_type_proto::DataType::Int32(_)) => {
+                    data_type_proto::DataType::Int32(_) => {
                         primitive_list_list_builder_int32(list_list)
                     }
-                    Some(data_type_proto::DataType::Int64(_)) => {
+                    data_type_proto::DataType::Int64(_) => {
                         primitive_list_list_builder_int64(list_list)
                     }
-                    Some(data_type_proto::DataType::Uint8(_)) => {
+                    data_type_proto::DataType::Uint8(_) => {
                         primitive_list_list_builder_uint8(list_list)
                     }
-                    Some(data_type_proto::DataType::Uint16(_)) => {
+                    data_type_proto::DataType::Uint16(_) => {
                         primitive_list_list_builder_uint16(list_list)
                     }
-                    Some(data_type_proto::DataType::Uint32(_)) => {
+                    data_type_proto::DataType::Uint32(_) => {
                         primitive_list_list_builder_uint32(list_list)
                     }
-                    Some(data_type_proto::DataType::Uint64(_)) => {
+                    data_type_proto::DataType::Uint64(_) => {
                         primitive_list_list_builder_uint64(list_list)
                     }
-                    Some(data_type_proto::DataType::Float16(_)) => {
+                    data_type_proto::DataType::Float16(_) => {
                         primitive_list_list_builder_float16(list_list)
                     }
-                    Some(data_type_proto::DataType::Float32(_)) => {
+                    data_type_proto::DataType::Float32(_) => {
                         primitive_list_list_builder_float32(list_list)
                     }
-                    Some(data_type_proto::DataType::Float64(_)) => {
+                    data_type_proto::DataType::Float64(_) => {
                         primitive_list_list_builder_float64(list_list)
                     }
                     _ => {
@@ -1667,40 +1683,50 @@ impl TableList {
                 }
             }
             table_list::Values::LargeList(list_list) => {
+                if list_list.list_type.is_none() {
+                    return Err(ArrowScalarError::InvalidProtobuf);
+                }
                 let list_type = list_list.list_type.as_ref().unwrap();
-                let list_data_type = list_type.data_type.as_ref();
+                if list_type.data_type.is_none() {
+                    return Err(ArrowScalarError::InvalidProtobuf);
+                }
+                let list_data_type = list_type.data_type.as_ref().unwrap();
+                if list_data_type.data_type.is_none() {
+                    return Err(ArrowScalarError::InvalidProtobuf);
+                }
+                let list_data_type = list_data_type.data_type.as_ref().unwrap();
                 match list_data_type {
-                    Some(data_type_proto::DataType::Int8(_)) => {
+                    data_type_proto::DataType::Int8(_) => {
                         primitive_list_list_builder_int8(list_list)
                     }
-                    Some(data_type_proto::DataType::Int16(_)) => {
+                    data_type_proto::DataType::Int16(_) => {
                         primitive_list_list_builder_int16(list_list)
                     }
-                    Some(data_type_proto::DataType::Int32(_)) => {
+                    data_type_proto::DataType::Int32(_) => {
                         primitive_list_list_builder_int32(list_list)
                     }
-                    Some(data_type_proto::DataType::Int64(_)) => {
+                    data_type_proto::DataType::Int64(_) => {
                         primitive_list_list_builder_int64(list_list)
                     }
-                    Some(data_type_proto::DataType::Uint8(_)) => {
+                    data_type_proto::DataType::Uint8(_) => {
                         primitive_list_list_builder_uint8(list_list)
                     }
-                    Some(data_type_proto::DataType::Uint16(_)) => {
+                    data_type_proto::DataType::Uint16(_) => {
                         primitive_list_list_builder_uint16(list_list)
                     }
-                    Some(data_type_proto::DataType::Uint32(_)) => {
+                    data_type_proto::DataType::Uint32(_) => {
                         primitive_list_list_builder_uint32(list_list)
                     }
-                    Some(data_type_proto::DataType::Uint64(_)) => {
+                    data_type_proto::DataType::Uint64(_) => {
                         primitive_list_list_builder_uint64(list_list)
                     }
-                    Some(data_type_proto::DataType::Float16(_)) => {
+                    data_type_proto::DataType::Float16(_) => {
                         primitive_list_list_builder_float16(list_list)
                     }
-                    Some(data_type_proto::DataType::Float32(_)) => {
+                    data_type_proto::DataType::Float32(_) => {
                         primitive_list_list_builder_float32(list_list)
                     }
-                    Some(data_type_proto::DataType::Float64(_)) => {
+                    data_type_proto::DataType::Float64(_) => {
                         primitive_list_list_builder_float64(list_list)
                     }
                     _ => {
@@ -2098,106 +2124,117 @@ impl TableList {
 }
 
 impl table_list::ListList {
-    pub fn push(&mut self, list: TableList) -> Result<(), TableScalar> {
+    pub fn push(&mut self, list: TableList) -> Result<(), TableList> {
         if list.values.is_none() {
             self.values.push(TableList::default());
             self.set.push(false);
         }
+        if self.list_type.is_none() {
+            return Err(list);
+        }
         let list_type = self.list_type.as_ref().unwrap();
-        let list_data_type = list_type.data_type.as_ref();
+        if list_type.data_type.is_none() {
+            return Err(list);
+        }
+        let list_data_type = list_type.data_type.as_ref().unwrap();
+        if list_data_type.data_type.is_none() {
+            return Err(list);
+        }
+        let list_data_type = list_data_type.data_type.as_ref().unwrap();
+
         match (list_data_type, list.values.unwrap()) {
-            (Some(data_type_proto::DataType::Bool(_)), table_list::Values::Boolean(value)) => {
+            (data_type_proto::DataType::Bool(_), table_list::Values::Boolean(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Boolean(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (Some(data_type_proto::DataType::Binary(_)), table_list::Values::Binary(value)) => {
+            (data_type_proto::DataType::Binary(_), table_list::Values::Binary(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Binary(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (Some(data_type_proto::DataType::Int8(_)), table_list::Values::Int8(value)) => {
+            (data_type_proto::DataType::Int8(_), table_list::Values::Int8(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Int8(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (Some(data_type_proto::DataType::Int16(_)), table_list::Values::Int16(value)) => {
+            (data_type_proto::DataType::Int16(_), table_list::Values::Int16(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Int16(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (Some(data_type_proto::DataType::Int32(_)), table_list::Values::Int32(value)) => {
+            (data_type_proto::DataType::Int32(_), table_list::Values::Int32(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Int32(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (Some(data_type_proto::DataType::Int64(_)), table_list::Values::Int64(value)) => {
+            (data_type_proto::DataType::Int64(_), table_list::Values::Int64(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Int64(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (Some(data_type_proto::DataType::Uint8(_)), table_list::Values::Uint8(value)) => {
+            (data_type_proto::DataType::Uint8(_), table_list::Values::Uint8(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Uint8(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (Some(data_type_proto::DataType::Uint16(_)), table_list::Values::Uint16(value)) => {
+            (data_type_proto::DataType::Uint16(_), table_list::Values::Uint16(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Uint16(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (Some(data_type_proto::DataType::Uint32(_)), table_list::Values::Uint32(value)) => {
+            (data_type_proto::DataType::Uint32(_), table_list::Values::Uint32(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Uint32(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (Some(data_type_proto::DataType::Uint64(_)), table_list::Values::Uint64(value)) => {
+            (data_type_proto::DataType::Uint64(_), table_list::Values::Uint64(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Uint64(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (Some(data_type_proto::DataType::Float16(_)), table_list::Values::Float16(value)) => {
+            (data_type_proto::DataType::Float16(_), table_list::Values::Float16(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Float16(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (Some(data_type_proto::DataType::Float32(_)), table_list::Values::Float32(value)) => {
+            (data_type_proto::DataType::Float32(_), table_list::Values::Float32(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Float32(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (Some(data_type_proto::DataType::Float64(_)), table_list::Values::Float64(value)) => {
+            (data_type_proto::DataType::Float64(_), table_list::Values::Float64(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Float64(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (Some(data_type_proto::DataType::Utf8(_)), table_list::Values::Utf8(value)) => {
+            (data_type_proto::DataType::Utf8(_), table_list::Values::Utf8(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Utf8(value)),
                 };
@@ -2205,7 +2242,7 @@ impl table_list::ListList {
                 self.set.push(true);
             }
             (
-                Some(data_type_proto::DataType::LargeUtf8(_)),
+                data_type_proto::DataType::LargeUtf8(_),
                 table_list::Values::LargeUtf8(value),
             ) => {
                 let rebuilt_list = TableList {
@@ -2215,7 +2252,7 @@ impl table_list::ListList {
                 self.set.push(true);
             }
             (
-                Some(data_type_proto::DataType::Timestamp(_)),
+                data_type_proto::DataType::Timestamp(_),
                 table_list::Values::Timestamp(value),
             ) => {
                 let rebuilt_list = TableList {
@@ -2224,28 +2261,28 @@ impl table_list::ListList {
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (Some(data_type_proto::DataType::Date32(_)), table_list::Values::Date32(value)) => {
+            (data_type_proto::DataType::Date32(_), table_list::Values::Date32(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Date32(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (Some(data_type_proto::DataType::Date64(_)), table_list::Values::Date64(value)) => {
+            (data_type_proto::DataType::Date64(_), table_list::Values::Date64(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Date64(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (Some(data_type_proto::DataType::Time32(_)), table_list::Values::Time32(value)) => {
+            (data_type_proto::DataType::Time32(_), table_list::Values::Time32(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Time32(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (Some(data_type_proto::DataType::Time64(_)), table_list::Values::Time64(value)) => {
+            (data_type_proto::DataType::Time64(_), table_list::Values::Time64(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Time32(value)),
                 };
@@ -2253,10 +2290,8 @@ impl table_list::ListList {
                 self.set.push(true);
             }
             (_, list_vals) => {
-                return Err(TableScalar {
-                    value: Some(table_scalar::Value::List(TableList {
-                        values: Some(list_vals),
-                    })),
+                return Err(TableList {
+                    values: Some(list_vals),
                 });
             }
         }

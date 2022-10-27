@@ -16,4 +16,6 @@ use thiserror::Error;
 pub enum ArrowScalarError {
     #[error("Method `{0}` is not available for type `{1}`")]
     Unimplemented(String, String),
+    #[error("Invalid Protobuf")]
+    InvalidProtobuf,
 }
