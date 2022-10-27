@@ -1,16 +1,18 @@
 [package]
 name = "arrow_scalars"
-version = "0.1.4"
+version = "0.2.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-arrow = {version = "24.0", default-features = false}
+arrow = { version = "24.0", default-features = false }
 half = "2.1.0"
-tonic = { version = "0.6.2", default-features = false, features = ["codegen", "prost"]} 
+tonic = { version = "0.6.2", default-features = false, features = ["codegen", "prost"] } 
 prost = { version = "0.9", default-features = false }
+prost-types = { version = "0.9", default-features = false }
 chrono = "0.4"
+thiserror = "1.0.31"
 
 [build-dependencies]
 tonic-build = { version = "0.6.2", default-features = false, features = ["prost"] }

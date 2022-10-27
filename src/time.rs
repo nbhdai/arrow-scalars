@@ -1,19 +1,21 @@
-use crate::table_scalar;
+use crate::{data_type_proto, table_scalar};
 use chrono::Timelike;
+
+use prost_types::Timestamp;
 
 impl From<table_scalar::Time> for chrono::NaiveDateTime {
     fn from(val: table_scalar::Time) -> Self {
         match val.unit() {
-            table_scalar::TimeUnit::Second => chrono::NaiveDateTime::from_timestamp(val.time, 0),
-            table_scalar::TimeUnit::Millisecond => chrono::NaiveDateTime::from_timestamp(
+            data_type_proto::TimeUnit::Second => chrono::NaiveDateTime::from_timestamp(val.time, 0),
+            data_type_proto::TimeUnit::Millisecond => chrono::NaiveDateTime::from_timestamp(
                 val.time / 1000,
                 (val.time as u32 % 1000) * 1_000_000,
             ),
-            table_scalar::TimeUnit::Microsecond => chrono::NaiveDateTime::from_timestamp(
+            data_type_proto::TimeUnit::Microsecond => chrono::NaiveDateTime::from_timestamp(
                 val.time / 1_000_000,
                 (val.time as u32 % 1_000_000) * 1_000,
             ),
-            table_scalar::TimeUnit::Nanosecond => chrono::NaiveDateTime::from_timestamp(
+            data_type_proto::TimeUnit::Nanosecond => chrono::NaiveDateTime::from_timestamp(
                 val.time / 1_000_000_000,
                 val.time as u32 % 1_000_000_000,
             ),
@@ -32,36 +34,36 @@ impl IntoScalarTime for chrono::NaiveTime {
     fn scalar_seconds_from_midnight(&self) -> table_scalar::Time {
         let seconds = self.num_seconds_from_midnight().into();
         table_scalar::Time {
-            unit: table_scalar::TimeUnit::Second.into(),
+            unit: data_type_proto::TimeUnit::Second.into(),
             time: seconds,
-            tz: String::new(),
+            tz: None,
         }
     }
     fn scalar_milliseconds_from_midnight(&self) -> table_scalar::Time {
         let seconds: i64 = self.num_seconds_from_midnight().into();
         let milli: i64 = self.nanosecond().into();
         table_scalar::Time {
-            unit: table_scalar::TimeUnit::Millisecond.into(),
+            unit: data_type_proto::TimeUnit::Millisecond.into(),
             time: seconds * 1000 + milli / 1_000_000,
-            tz: String::new(),
+            tz: None,
         }
     }
     fn scalar_microseconds_from_midnight(&self) -> table_scalar::Time {
         let seconds: i64 = self.num_seconds_from_midnight().into();
         let micro: i64 = self.nanosecond().into();
         table_scalar::Time {
-            unit: table_scalar::TimeUnit::Microsecond.into(),
+            unit: data_type_proto::TimeUnit::Microsecond.into(),
             time: seconds * 1_000_000 + micro / 1_000,
-            tz: String::new(),
+            tz: None,
         }
     }
     fn scalar_nanoseconds_from_midnight(&self) -> table_scalar::Time {
         let seconds: i64 = self.num_seconds_from_midnight().into();
         let nano: i64 = self.nanosecond().into();
         table_scalar::Time {
-            unit: table_scalar::TimeUnit::Nanosecond.into(),
+            unit: data_type_proto::TimeUnit::Nanosecond.into(),
             time: seconds * 1_000_000_000 + nano,
-            tz: String::new(),
+            tz: None,
         }
     }
 }
@@ -69,28 +71,57 @@ impl IntoScalarTime for chrono::NaiveTime {
 impl From<table_scalar::Time> for chrono::NaiveTime {
     fn from(val: table_scalar::Time) -> Self {
         match val.unit() {
-            table_scalar::TimeUnit::Second => {
+            data_type_proto::TimeUnit::Second => {
                 chrono::NaiveTime::from_num_seconds_from_midnight(val.time as u32, 0)
             }
-            table_scalar::TimeUnit::Millisecond => {
+            data_type_proto::TimeUnit::Millisecond => {
                 chrono::NaiveTime::from_num_seconds_from_midnight(
                     (val.time / 1000) as u32,
                     ((val.time % 1000) * 1_000_000) as u32,
                 )
             }
-            table_scalar::TimeUnit::Microsecond => {
+            data_type_proto::TimeUnit::Microsecond => {
                 chrono::NaiveTime::from_num_seconds_from_midnight(
                     (val.time / 1_000_000) as u32,
                     ((val.time % 1_000_000) * 1_000) as u32,
                 )
             }
-            table_scalar::TimeUnit::Nanosecond => {
+            data_type_proto::TimeUnit::Nanosecond => {
                 chrono::NaiveTime::from_num_seconds_from_midnight(
                     (val.time / 1_000_000_000) as u32,
                     (val.time % 1_000_000_000) as u32,
                 )
             }
         }
+    }
+}
+
+impl From<table_scalar::Time> for Timestamp {
+    fn from(val: table_scalar::Time) -> Self {
+        let dt = chrono::NaiveDateTime::from(val);
+        Timestamp {
+            seconds: dt.timestamp(),
+            nanos: dt.timestamp_subsec_nanos() as i32,
+        }
+    }
+}
+
+impl IntoScalarTime for Timestamp {
+    fn scalar_seconds_from_midnight(&self) -> table_scalar::Time {
+        let dt = chrono::NaiveDateTime::from_timestamp(self.seconds, self.nanos as u32);
+        dt.time().scalar_seconds_from_midnight()
+    }
+    fn scalar_milliseconds_from_midnight(&self) -> table_scalar::Time {
+        let dt = chrono::NaiveDateTime::from_timestamp(self.seconds, self.nanos as u32);
+        dt.time().scalar_milliseconds_from_midnight()
+    }
+    fn scalar_microseconds_from_midnight(&self) -> table_scalar::Time {
+        let dt = chrono::NaiveDateTime::from_timestamp(self.seconds, self.nanos as u32);
+        dt.time().scalar_microseconds_from_midnight()
+    }
+    fn scalar_nanoseconds_from_midnight(&self) -> table_scalar::Time {
+        let dt = chrono::NaiveDateTime::from_timestamp(self.seconds, self.nanos as u32);
+        dt.time().scalar_nanoseconds_from_midnight()
     }
 }
 
@@ -154,13 +185,13 @@ pub mod tests {
         ];
         let array = Time32SecondArray::from(values);
         let mut time_base = table_scalar::Time {
-            unit: table_scalar::TimeUnit::Second.into(),
+            unit: data_type_proto::TimeUnit::Second.into(),
             time: 0,
-            tz: String::new(),
+            tz: None,
         };
         time_base.time = time_1.num_seconds_from_midnight() as i64;
         assert_eq!(
-            array.scalar(0),
+            array.scalar(0).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Time32(time_base.clone()))
             }
@@ -169,22 +200,22 @@ pub mod tests {
         assert!(array.value_as_time(0).is_some());
         time_base.time = time_2.num_seconds_from_midnight() as i64;
         assert_eq!(
-            array.scalar(1),
+            array.scalar(1).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Time32(time_base.clone()))
             }
         );
-        assert_eq!(array.scalar(2), TableScalar { value: None });
+        assert_eq!(array.scalar(2).unwrap(), TableScalar { value: None });
         time_base.time = time_3.num_seconds_from_midnight() as i64;
         assert_eq!(
-            array.scalar(3),
+            array.scalar(3).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Time32(time_base.clone()))
             }
         );
         time_base.time = time_4.num_seconds_from_midnight() as i64;
         assert_eq!(
-            array.scalar(4),
+            array.scalar(4).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Time32(time_base))
             }
@@ -207,7 +238,7 @@ pub mod tests {
 
         let array = Time64NanosecondArray::from(values);
         assert_eq!(
-            array.scalar(0),
+            array.scalar(0).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Time64(
                     time_1.scalar_nanoseconds_from_midnight()
@@ -216,16 +247,16 @@ pub mod tests {
         );
         assert_eq!(array.value_as_time(0), Some(time_1));
         assert_eq!(
-            array.scalar(1),
+            array.scalar(1).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Time64(
                     time_2.scalar_nanoseconds_from_midnight()
                 ))
             }
         );
-        assert_eq!(array.scalar(2), TableScalar { value: None });
+        assert_eq!(array.scalar(2).unwrap(), TableScalar { value: None });
         assert_eq!(
-            array.scalar(3),
+            array.scalar(3).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Time64(
                     time_3.scalar_nanoseconds_from_midnight()
@@ -233,7 +264,7 @@ pub mod tests {
             }
         );
         assert_eq!(
-            array.scalar(4),
+            array.scalar(4).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Time64(
                     time_4.scalar_nanoseconds_from_midnight()
@@ -263,37 +294,37 @@ pub mod tests {
 
         let array = TimestampMillisecondArray::from(values);
         let mut time_base = table_scalar::Time {
-            unit: table_scalar::TimeUnit::Millisecond.into(),
+            unit: data_type_proto::TimeUnit::Millisecond.into(),
             time: 0,
-            tz: String::new(),
+            tz: None,
         };
-        time_base.time = datetime_1.timestamp_millis() as i64;
+        time_base.time = datetime_1.timestamp_millis();
         assert_eq!(
-            array.scalar(0),
+            array.scalar(0).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Timestamp(time_base.clone()))
             }
         );
         assert_eq!(array.value_as_datetime(0), Some(datetime_1));
-        time_base.time = datetime_2.timestamp_millis() as i64;
+        time_base.time = datetime_2.timestamp_millis();
         assert_eq!(
-            array.scalar(1),
+            array.scalar(1).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Timestamp(time_base.clone()))
             }
         );
 
-        assert_eq!(array.scalar(2), TableScalar { value: None });
-        time_base.time = datetime_3.timestamp_millis() as i64;
+        assert_eq!(array.scalar(2).unwrap(), TableScalar { value: None });
+        time_base.time = datetime_3.timestamp_millis();
         assert_eq!(
-            array.scalar(3),
+            array.scalar(3).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Timestamp(time_base.clone()))
             }
         );
-        time_base.time = datetime_4.timestamp_millis() as i64;
+        time_base.time = datetime_4.timestamp_millis();
         assert_eq!(
-            array.scalar(4),
+            array.scalar(4).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Timestamp(time_base))
             }

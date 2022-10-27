@@ -1,17 +1,18 @@
 use crate::list::ListValuable;
-use crate::{table_scalar, TableScalar};
+use crate::{data_type_proto, table_scalar, ArrowScalarError, TableScalar};
 use arrow::array::*;
 use arrow::datatypes::*;
+use std::collections::HashMap;
 use std::ops::Deref;
 
 pub trait ScalarValuable {
-    fn scalar(&self, i: usize) -> TableScalar;
+    fn scalar(&self, i: usize) -> Result<TableScalar, ArrowScalarError>;
 }
 
 impl<T: Array> ScalarValuable for T {
-    fn scalar(&self, i: usize) -> TableScalar {
+    fn scalar(&self, i: usize) -> Result<TableScalar, ArrowScalarError> {
         if self.is_null(i) {
-            return TableScalar { value: None };
+            return Ok(TableScalar { value: None });
         }
         let value = match self.data_type() {
             DataType::Null => unreachable!(),
@@ -76,6 +77,10 @@ impl<T: Array> ScalarValuable for T {
                 let array = as_generic_binary_array::<i32>(self);
                 Some(table_scalar::Value::Binary(array.value(i).into()))
             }
+            DataType::LargeBinary => {
+                let array = as_generic_binary_array::<i64>(self);
+                Some(table_scalar::Value::LargeBinary(array.value(i).into()))
+            }
             DataType::FixedSizeBinary(_) => {
                 let array = self
                     .as_any()
@@ -95,37 +100,37 @@ impl<T: Array> ScalarValuable for T {
             DataType::Timestamp(unit, tz) => {
                 let (unit, value) = match unit {
                     TimeUnit::Second => (
-                        table_scalar::TimeUnit::Second,
+                        data_type_proto::TimeUnit::Second,
                         as_primitive_array::<TimestampSecondType>(self).value(i),
                     ),
                     TimeUnit::Millisecond => (
-                        table_scalar::TimeUnit::Millisecond,
+                        data_type_proto::TimeUnit::Millisecond,
                         as_primitive_array::<TimestampMillisecondType>(self).value(i),
                     ),
                     TimeUnit::Microsecond => (
-                        table_scalar::TimeUnit::Microsecond,
+                        data_type_proto::TimeUnit::Microsecond,
                         as_primitive_array::<TimestampMicrosecondType>(self).value(i),
                     ),
                     TimeUnit::Nanosecond => (
-                        table_scalar::TimeUnit::Nanosecond,
+                        data_type_proto::TimeUnit::Nanosecond,
                         as_primitive_array::<TimestampNanosecondType>(self).value(i),
                     ),
                 };
                 let time = table_scalar::Time {
                     unit: unit.into(),
                     time: value,
-                    tz: tz.clone().unwrap_or_default(),
+                    tz: tz.clone(),
                 };
                 Some(table_scalar::Value::Timestamp(time))
             }
             DataType::Time32(unit) => {
                 let (unit, value) = match unit {
                     TimeUnit::Second => (
-                        table_scalar::TimeUnit::Second,
+                        data_type_proto::TimeUnit::Second,
                         as_primitive_array::<Time32SecondType>(self).value(i).into(),
                     ),
                     TimeUnit::Millisecond => (
-                        table_scalar::TimeUnit::Millisecond,
+                        data_type_proto::TimeUnit::Millisecond,
                         as_primitive_array::<Time32MillisecondType>(self)
                             .value(i)
                             .into(),
@@ -135,18 +140,18 @@ impl<T: Array> ScalarValuable for T {
                 let time = table_scalar::Time {
                     unit: unit.into(),
                     time: value,
-                    tz: String::new(),
+                    tz: None,
                 };
                 Some(table_scalar::Value::Time32(time))
             }
             DataType::Time64(unit) => {
                 let (unit, value) = match unit {
                     TimeUnit::Microsecond => (
-                        table_scalar::TimeUnit::Microsecond,
+                        data_type_proto::TimeUnit::Microsecond,
                         as_primitive_array::<Time64MicrosecondType>(self).value(i),
                     ),
                     TimeUnit::Nanosecond => (
-                        table_scalar::TimeUnit::Nanosecond,
+                        data_type_proto::TimeUnit::Nanosecond,
                         as_primitive_array::<Time64NanosecondType>(self).value(i),
                     ),
                     _ => unreachable!(),
@@ -154,32 +159,66 @@ impl<T: Array> ScalarValuable for T {
                 let time = table_scalar::Time {
                     unit: unit.into(),
                     time: value,
-                    tz: String::new(),
+                    tz: None,
                 };
                 Some(table_scalar::Value::Time64(time))
             }
             DataType::Interval(interval) => {
                 let value = match interval {
-                    IntervalUnit::YearMonth => table_scalar::interval::Unit::YearMonth(
+                    IntervalUnit::YearMonth => table_scalar::interval::Interval::YearMonth(
                         as_primitive_array::<IntervalYearMonthType>(self).value(i),
                     ),
-                    IntervalUnit::DayTime => table_scalar::interval::Unit::DayTime(
+                    IntervalUnit::DayTime => table_scalar::interval::Interval::DayTime(
                         as_primitive_array::<IntervalDayTimeType>(self).value(i),
                     ),
                     IntervalUnit::MonthDayNano => {
                         let value = as_primitive_array::<IntervalMonthDayNanoType>(self)
                             .value(i)
                             .to_le_bytes();
-                        table_scalar::interval::Unit::MonthDayNano(value.to_vec())
+                        table_scalar::interval::Interval::MonthDayNano(value.to_vec())
                     }
                 };
-                let interval = table_scalar::Interval { unit: Some(value) };
+                let interval = table_scalar::Interval {
+                    interval: Some(value),
+                };
                 Some(table_scalar::Value::Interval(interval))
+            }
+            DataType::Duration(unit) => {
+                let (unit, value) = match unit {
+                    TimeUnit::Second => (
+                        data_type_proto::TimeUnit::Second,
+                        as_primitive_array::<DurationSecondType>(self).value(i),
+                    ),
+                    TimeUnit::Millisecond => (
+                        data_type_proto::TimeUnit::Millisecond,
+                        as_primitive_array::<DurationMillisecondType>(self).value(i),
+                    ),
+                    TimeUnit::Microsecond => (
+                        data_type_proto::TimeUnit::Microsecond,
+                        as_primitive_array::<DurationMicrosecondType>(self).value(i),
+                    ),
+                    TimeUnit::Nanosecond => (
+                        data_type_proto::TimeUnit::Nanosecond,
+                        as_primitive_array::<DurationNanosecondType>(self).value(i),
+                    ),
+                };
+                let duration = table_scalar::Duration {
+                    unit: unit.into(),
+                    duration: value,
+                };
+                Some(table_scalar::Value::Duration(duration))
             }
             DataType::Struct(_) => {
                 let arrays = as_struct_array(self);
-                let elements = arrays.columns().iter().map(|arr| arr.scalar(i)).collect();
-                let value = table_scalar::Struct { elements };
+                let elements: Result<HashMap<String, TableScalar>, ArrowScalarError> = arrays
+                    .columns()
+                    .iter()
+                    .zip(arrays.column_names())
+                    .map(|(arr, str)| Ok((str.to_string(), arr.scalar(i)?)))
+                    .collect();
+                let value = table_scalar::Struct {
+                    elements: elements?,
+                };
                 Some(table_scalar::Value::Struct(value))
             }
             DataType::Dictionary(key_type, _) => {
@@ -227,27 +266,67 @@ impl<T: Array> ScalarValuable for T {
                     _ => unreachable!(),
                 };
 
-                Some(table_scalar::Value::Dictionary(Box::new(value)))
+                Some(table_scalar::Value::Dictionary(Box::new(value?)))
             }
             DataType::List(_) => {
                 let array = self
                     .as_any()
                     .downcast_ref::<ListArray>()
                     .expect("Just checked it has this type.");
-                let value = array.value(i).into_list();
+                let value = array.value(i).clone_as_list()?;
                 Some(table_scalar::Value::List(value))
             }
-            _ => unimplemented!(),
+            DataType::LargeList(_) => {
+                let array = self
+                    .as_any()
+                    .downcast_ref::<LargeListArray>()
+                    .expect("Just checked it has this type.");
+                let value = array.value(i).clone_as_list()?;
+                Some(table_scalar::Value::LargeList(value))
+            }
+            DataType::FixedSizeList(_, _) => {
+                let array = self
+                    .as_any()
+                    .downcast_ref::<FixedSizeListArray>()
+                    .expect("Just checked it has this type.");
+                let value = array.value(i).clone_as_list()?;
+                Some(table_scalar::Value::FixedSizeList(value))
+            }
+            // Unsupported types
+            DataType::Union(_, _, _) => {
+                return Err(ArrowScalarError::Unimplemented(
+                    "Array::scalar".to_string(),
+                    "Union".to_string(),
+                ));
+            }
+            DataType::Decimal128(_, _) => {
+                return Err(ArrowScalarError::Unimplemented(
+                    "Array::scalar".to_string(),
+                    "Decimal128".to_string(),
+                ));
+            }
+            DataType::Decimal256(_, _) => {
+                return Err(ArrowScalarError::Unimplemented(
+                    "Array::scalar".to_string(),
+                    "Decimal256".to_string(),
+                ));
+            }
+            DataType::Map(_, _) => {
+                return Err(ArrowScalarError::Unimplemented(
+                    "Array::scalar".to_string(),
+                    "Map".to_string(),
+                ));
+            }
         };
-        TableScalar { value }
+        Ok(TableScalar { value })
     }
 }
 
 #[cfg(test)]
 pub mod tests {
-    use std::sync::Arc;
+    use std::{collections::HashMap, sync::Arc};
 
-    use crate::table_scalar::{table_list, TableList};
+    use crate::{table_list, TableList};
 
     use super::*;
 
@@ -256,18 +335,18 @@ pub mod tests {
         let values = vec![Some(true), Some(false), None, Some(true), Some(false)];
         let array = BooleanArray::from(values);
         assert_eq!(
-            array.scalar(0),
+            array.scalar(0).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Boolean(true))
             }
         );
         assert_eq!(
-            array.scalar(1),
+            array.scalar(1).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Boolean(false))
             }
         );
-        assert_eq!(array.scalar(2), TableScalar { value: None });
+        assert_eq!(array.scalar(2).unwrap(), TableScalar { value: None });
     }
 
     #[test]
@@ -275,26 +354,26 @@ pub mod tests {
         let values = vec![Some(1), Some(2), None, Some(3), Some(4)];
         let array = Int8Array::from(values);
         assert_eq!(
-            array.scalar(0),
+            array.scalar(0).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Int8(1))
             }
         );
         assert_eq!(
-            array.scalar(1),
+            array.scalar(1).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Int8(2))
             }
         );
-        assert_eq!(array.scalar(2), TableScalar { value: None });
+        assert_eq!(array.scalar(2).unwrap(), TableScalar { value: None });
         assert_eq!(
-            array.scalar(3),
+            array.scalar(3).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Int8(3))
             }
         );
         assert_eq!(
-            array.scalar(4),
+            array.scalar(4).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Int8(4))
             }
@@ -306,26 +385,26 @@ pub mod tests {
         let values = vec![Some("1.0"), Some("2.0"), None, Some("3.0"), Some("4.0")];
         let array = StringArray::from(values);
         assert_eq!(
-            array.scalar(0),
+            array.scalar(0).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Utf8("1.0".to_string()))
             }
         );
         assert_eq!(
-            array.scalar(1),
+            array.scalar(1).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Utf8("2.0".to_string()))
             }
         );
-        assert_eq!(array.scalar(2), TableScalar { value: None });
+        assert_eq!(array.scalar(2).unwrap(), TableScalar { value: None });
         assert_eq!(
-            array.scalar(3),
+            array.scalar(3).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Utf8("3.0".to_string()))
             }
         );
         assert_eq!(
-            array.scalar(4),
+            array.scalar(4).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Utf8("4.0".to_string()))
             }
@@ -337,26 +416,26 @@ pub mod tests {
         let values = vec![Some("1.0"), Some("2.0"), None, Some("3.0"), Some("4.0")];
         let array = LargeStringArray::from(values);
         assert_eq!(
-            array.scalar(0),
+            array.scalar(0).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::LargeUtf8("1.0".to_string()))
             }
         );
         assert_eq!(
-            array.scalar(1),
+            array.scalar(1).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::LargeUtf8("2.0".to_string()))
             }
         );
-        assert_eq!(array.scalar(2), TableScalar { value: None });
+        assert_eq!(array.scalar(2).unwrap(), TableScalar { value: None });
         assert_eq!(
-            array.scalar(3),
+            array.scalar(3).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::LargeUtf8("3.0".to_string()))
             }
         );
         assert_eq!(
-            array.scalar(4),
+            array.scalar(4).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::LargeUtf8("4.0".to_string()))
             }
@@ -368,26 +447,26 @@ pub mod tests {
         let values = vec![Some(1.0), Some(2.0), None, Some(3.0), Some(4.0)];
         let array = Float32Array::from(values);
         assert_eq!(
-            array.scalar(0),
+            array.scalar(0).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Float32(1.0))
             }
         );
         assert_eq!(
-            array.scalar(1),
+            array.scalar(1).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Float32(2.0))
             }
         );
-        assert_eq!(array.scalar(2), TableScalar { value: None });
+        assert_eq!(array.scalar(2).unwrap(), TableScalar { value: None });
         assert_eq!(
-            array.scalar(3),
+            array.scalar(3).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Float32(3.0))
             }
         );
         assert_eq!(
-            array.scalar(4),
+            array.scalar(4).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Float32(4.0))
             }
@@ -428,15 +507,21 @@ pub mod tests {
         ];
         let struct_array = StructArray::from(schema);
         let first_scalar = table_scalar::Struct {
-            elements: vec![
-                TableScalar {
-                    value: Some(table_scalar::Value::Boolean(false)),
-                },
-                TableScalar {
-                    value: Some(table_scalar::Value::Float64(2.0)),
-                },
-                TableScalar { value: None },
-            ],
+            elements: HashMap::from([
+                (
+                    "bo".to_owned(),
+                    TableScalar {
+                        value: Some(table_scalar::Value::Boolean(false)),
+                    },
+                ),
+                (
+                    "fl".to_owned(),
+                    TableScalar {
+                        value: Some(table_scalar::Value::Float64(2.0)),
+                    },
+                ),
+                ("list".to_owned(), TableScalar { value: None }),
+            ]),
         };
         let list_entries = table_list::Int32List {
             values: vec![3, 0, 5],
@@ -446,25 +531,31 @@ pub mod tests {
             values: Some(table_list::Values::Int32(list_entries)),
         };
         let second_scalar = table_scalar::Struct {
-            elements: vec![
-                TableScalar { value: None },
-                TableScalar {
-                    value: Some(table_scalar::Value::Float64(0.0)),
-                },
-                TableScalar {
-                    value: Some(table_scalar::Value::List(list_value)),
-                },
-            ],
+            elements: HashMap::from([
+                ("bo".to_owned(), TableScalar { value: None }),
+                (
+                    "b1".to_owned(),
+                    TableScalar {
+                        value: Some(table_scalar::Value::Float64(0.0)),
+                    },
+                ),
+                (
+                    "list".to_owned(),
+                    TableScalar {
+                        value: Some(table_scalar::Value::List(list_value)),
+                    },
+                ),
+            ]),
         };
 
         assert_eq!(
-            struct_array.scalar(1),
+            struct_array.scalar(1).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Struct(first_scalar))
             }
         );
         assert_eq!(
-            struct_array.scalar(2),
+            struct_array.scalar(2).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Struct(second_scalar))
             }
@@ -482,7 +573,7 @@ pub mod tests {
         let dict_scalar = TableScalar {
             value: Some(table_scalar::Value::Dictionary(Box::new(scalar))),
         };
-        assert_eq!(array.scalar(1), dict_scalar);
+        assert_eq!(array.scalar(1).unwrap(), dict_scalar);
     }
 
     /*
@@ -491,7 +582,7 @@ pub mod tests {
         let values = vec!["one", "one", "three", "one", "one"];
         let array: Arc<DictionaryArray<Int8Type>> = Arc::new(values.into_iter().collect());
 
-        let list = array.into_list();
+        let list = array.clone_as_list();
         let intended_list = TableList {
             values: Some(table_list::Values::Dictionary(Box::new(TableList {
                 values: Some(table_list::Values::Utf8(Utf8List {
@@ -532,7 +623,7 @@ pub mod tests {
             values: Some(table_list::Values::Int32(list_entries)),
         };
         assert_eq!(
-            list_array.scalar(2),
+            list_array.scalar(2).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::List(list_value))
             }
@@ -561,7 +652,7 @@ pub mod tests {
             values: Some(table_list::Values::Int32(list_entries)),
         };
         assert_eq!(
-            array.scalar(2),
+            array.scalar(2).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Dictionary(Box::new(TableScalar {
                     value: Some(table_scalar::Value::List(list_value))
@@ -577,7 +668,7 @@ pub mod tests {
             values: Some(table_list::Values::Int32(list_entries)),
         };
         assert_eq!(
-            array.scalar(6),
+            array.scalar(6).unwrap(),
             TableScalar {
                 value: Some(table_scalar::Value::Dictionary(Box::new(TableScalar {
                     value: Some(table_scalar::Value::List(list_value))
