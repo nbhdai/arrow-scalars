@@ -2030,7 +2030,7 @@ impl TableList {
                     .values
                     .iter()
                     .map(|(name, list)| {
-                        Ok((Field::new(name, list.data_type(), false), list.to_array()?))
+                        Ok((Field::new(name, list.data_type()?, false), list.to_array()?))
                     })
                     .collect::<Result<Vec<_>, ArrowScalarError>>()?;
                 Arc::new(StructArray::from(arrays))
@@ -2283,8 +2283,159 @@ impl TableList {
         Ok(array)
     }
 
-    pub fn data_type(&self) -> DataType {
-        todo!()
+    pub fn data_type(&self) -> Result<DataType, ArrowScalarError> {
+        
+        match self.values.as_ref().unwrap() {
+            table_list::Values::Boolean(_) => Ok(DataType::Boolean),
+            table_list::Values::Int8(_) => Ok(DataType::Int8),
+            table_list::Values::Int16(_) => Ok(DataType::Int16),
+            table_list::Values::Int32(_) => Ok(DataType::Int32),
+            table_list::Values::Int64(_) => Ok(DataType::Int64),
+            table_list::Values::Uint8(_) => Ok(DataType::UInt8),
+            table_list::Values::Uint16(_) => Ok(DataType::UInt16),
+            table_list::Values::Uint32(_) => Ok(DataType::UInt32),
+            table_list::Values::Uint64(_) => Ok(DataType::UInt64),
+            table_list::Values::Float16(_) => Ok(DataType::Float16),
+            table_list::Values::Float32(_) => Ok(DataType::Float32),
+            table_list::Values::Float64(_) => Ok(DataType::Float64),
+            table_list::Values::Utf8(_) => Ok(DataType::Utf8),
+            table_list::Values::LargeUtf8(_) => Ok(DataType::LargeUtf8),
+            table_list::Values::Date32(table_list::Int32List { values, set: _ }) => Ok(DataType::Date32),
+            table_list::Values::Date64(table_list::Int64List { values, set: _ }) => Ok(DataType::Date64),
+            table_list::Values::List(table_list::ListList {
+                values,
+                set: _,
+                list_type,
+                size: _,
+            }) => {
+                if let Some(list_type) = list_type {
+                    Ok(DataType::List(Box::new(list_type.to_arrow()?)))
+                } else {
+                    Err(ArrowScalarError::InvalidProtobuf)
+                }
+            }
+            table_list::Values::LargeList(table_list::ListList {
+                values,
+                set: _,
+                list_type,
+                size: _,
+            }) => {
+                if let Some(list_type) = list_type {
+                    Ok(DataType::LargeList(Box::new(list_type.to_arrow()?)))
+                } else {
+                    Err(ArrowScalarError::InvalidProtobuf)
+                }
+            }
+            table_list::Values::FixedSizeList(table_list::ListList {
+                values,
+                set: _,
+                list_type,
+                size,
+            }) => {
+                if let (Some(list_type), Some(size)) = (list_type, size) {
+                    Ok(DataType::FixedSizeList(Box::new(list_type.to_arrow()?), *size))
+                } else {
+                    Err(ArrowScalarError::InvalidProtobuf)
+                }
+            }
+            table_list::Values::Binary(_) => Ok(DataType::Binary),
+            table_list::Values::LargeBinary(_) => Ok(DataType::LargeBinary),
+            table_list::Values::FixedSizeBinary(table_list::BinaryList {
+                values: _,
+                set: _,
+                size,
+            }) => {
+                if let Some(size) = size {
+                    Ok(DataType::FixedSizeBinary(*size))
+                } else {
+                    Err(ArrowScalarError::InvalidProtobuf)
+                }
+            },
+            table_list::Values::Struct(table_list::StructList { values, set: _ }) => {
+                let fields = values.iter().map(|(key, arr)| Ok(Field::new(key,arr.data_type()?, true))).collect::<Result<Vec<_>,_>>()?;
+                Ok(DataType::Struct(fields))
+            }
+            table_list::Values::Union(table_list::UnionList { values, set: _ }) => {
+                Err(ArrowScalarError::Unimplemented(
+                    "TableList::data_type".to_string(),
+                    "Union".to_string(),
+                ))
+            },
+            table_list::Values::Dictionary(dict) => {
+                Err(ArrowScalarError::Unimplemented(
+                    "TableList::data_type".to_string(),
+                    "Union".to_string(),
+                ))
+            }
+            table_list::Values::Time32(table_list::TimeList {
+                times: _,
+                unit,
+                tz: _,
+                set: _,
+            }) => {
+                match data_type_proto::TimeUnit::from_i32(*unit) {
+                    Some(data_type_proto::TimeUnit::Second) => Ok(DataType::Time32(TimeUnit::Second)),
+                    Some(data_type_proto::TimeUnit::Microsecond) => Ok(DataType::Time32(TimeUnit::Microsecond)),
+                    Some(data_type_proto::TimeUnit::Millisecond) => Ok(DataType::Time32(TimeUnit::Millisecond)),
+                    Some(data_type_proto::TimeUnit::Nanosecond) => Ok(DataType::Time32(TimeUnit::Nanosecond)),
+                    None => Err(ArrowScalarError::InvalidProtobuf),
+                }
+            },
+            table_list::Values::Time64(table_list::TimeList {
+                times: _,
+                unit,
+                tz: _,
+                set: _,
+            }) => {
+                match data_type_proto::TimeUnit::from_i32(*unit) {
+                    Some(data_type_proto::TimeUnit::Second) => Ok(DataType::Time64(TimeUnit::Second)),
+                    Some(data_type_proto::TimeUnit::Microsecond) => Ok(DataType::Time64(TimeUnit::Microsecond)),
+                    Some(data_type_proto::TimeUnit::Millisecond) => Ok(DataType::Time64(TimeUnit::Millisecond)),
+                    Some(data_type_proto::TimeUnit::Nanosecond) => Ok(DataType::Time64(TimeUnit::Nanosecond)),
+                    None => Err(ArrowScalarError::InvalidProtobuf),
+                }
+            },
+            table_list::Values::Timestamp(table_list::TimeList {
+                times: _,
+                unit,
+                tz,
+                set: _,
+            }) => {
+                let unit = match data_type_proto::TimeUnit::from_i32(*unit) {
+                    Some(data_type_proto::TimeUnit::Second) => TimeUnit::Second,
+                    Some(data_type_proto::TimeUnit::Microsecond) => TimeUnit::Microsecond,
+                    Some(data_type_proto::TimeUnit::Millisecond) => TimeUnit::Millisecond,
+                    Some(data_type_proto::TimeUnit::Nanosecond) => TimeUnit::Nanosecond,
+                    None => return Err(ArrowScalarError::InvalidProtobuf),
+                };
+                Ok(DataType::Timestamp(unit, tz.to_owned()))
+            },
+            table_list::Values::Interval(table_list::IntervalList {
+                intervals: _,
+                unit,
+                set: _,
+            }) => {
+                match data_type_proto::IntervalUnit::from_i32(*unit) {
+                    Some(data_type_proto::IntervalUnit::DayTime) => Ok(DataType::Interval(IntervalUnit::DayTime)),
+                    Some(data_type_proto::IntervalUnit::YearMonth) => Ok(DataType::Interval(IntervalUnit::YearMonth)),
+                    Some(data_type_proto::IntervalUnit::MonthDayNano) => Ok(DataType::Interval(IntervalUnit::MonthDayNano)),
+                    None => Err(ArrowScalarError::InvalidProtobuf),
+                }
+            }
+            table_list::Values::Duration(table_list::DurationList {
+                durations,
+                unit,
+                set: _,
+            }) => {
+                match data_type_proto::TimeUnit::from_i32(*unit) {
+                    Some(data_type_proto::TimeUnit::Second) => Ok(DataType::Duration(TimeUnit::Second)),
+                    Some(data_type_proto::TimeUnit::Microsecond) => Ok(DataType::Duration(TimeUnit::Microsecond)),
+                    Some(data_type_proto::TimeUnit::Millisecond) => Ok(DataType::Duration(TimeUnit::Millisecond)),
+                    Some(data_type_proto::TimeUnit::Nanosecond) => Ok(DataType::Duration(TimeUnit::Nanosecond)),
+                    None => Err(ArrowScalarError::InvalidProtobuf),
+                }
+            }
+        }
     }
 
     pub fn is_empty(&self) -> bool {
