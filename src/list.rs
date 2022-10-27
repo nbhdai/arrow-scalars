@@ -2300,10 +2300,10 @@ impl TableList {
             table_list::Values::Float64(_) => Ok(DataType::Float64),
             table_list::Values::Utf8(_) => Ok(DataType::Utf8),
             table_list::Values::LargeUtf8(_) => Ok(DataType::LargeUtf8),
-            table_list::Values::Date32(table_list::Int32List { values, set: _ }) => Ok(DataType::Date32),
-            table_list::Values::Date64(table_list::Int64List { values, set: _ }) => Ok(DataType::Date64),
+            table_list::Values::Date32(table_list::Int32List { values: _, set: _ }) => Ok(DataType::Date32),
+            table_list::Values::Date64(table_list::Int64List { values: _, set: _ }) => Ok(DataType::Date64),
             table_list::Values::List(table_list::ListList {
-                values,
+                values: _,
                 set: _,
                 list_type,
                 size: _,
@@ -2315,7 +2315,7 @@ impl TableList {
                 }
             }
             table_list::Values::LargeList(table_list::ListList {
-                values,
+                values: _,
                 set: _,
                 list_type,
                 size: _,
@@ -2327,7 +2327,7 @@ impl TableList {
                 }
             }
             table_list::Values::FixedSizeList(table_list::ListList {
-                values,
+                values: _,
                 set: _,
                 list_type,
                 size,
@@ -2355,13 +2355,13 @@ impl TableList {
                 let fields = values.iter().map(|(key, arr)| Ok(Field::new(key,arr.data_type()?, true))).collect::<Result<Vec<_>,_>>()?;
                 Ok(DataType::Struct(fields))
             }
-            table_list::Values::Union(table_list::UnionList { values, set: _ }) => {
+            table_list::Values::Union(table_list::UnionList { values: _, set: _ }) => {
                 Err(ArrowScalarError::Unimplemented(
                     "TableList::data_type".to_string(),
                     "Union".to_string(),
                 ))
             },
-            table_list::Values::Dictionary(dict) => {
+            table_list::Values::Dictionary(_dict) => {
                 Err(ArrowScalarError::Unimplemented(
                     "TableList::data_type".to_string(),
                     "Union".to_string(),
@@ -2423,7 +2423,7 @@ impl TableList {
                 }
             }
             table_list::Values::Duration(table_list::DurationList {
-                durations,
+                durations: _,
                 unit,
                 set: _,
             }) => {
