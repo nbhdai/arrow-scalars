@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{ArrowScalarError, ScalarValuable, TableRow, Table, TableScalar};
+use crate::{ArrowScalarError, ScalarValuable, Table, TableRow, TableScalar};
 use arrow::record_batch::RecordBatch;
 
 pub trait RowValuable {
@@ -23,9 +23,11 @@ impl RowValuable for RecordBatch {
 
 impl RowValuable for Table {
     fn row_value(&self, index: usize) -> Result<TableRow, ArrowScalarError> {
-        let values = self.values.iter().map(|(name, column)| {
-            Ok((name.to_owned(), column.scalar(index)?))
-        }).collect::<Result<HashMap<String, TableScalar>,ArrowScalarError>>()?;
+        let values = self
+            .values
+            .iter()
+            .map(|(name, column)| Ok((name.to_owned(), column.scalar(index)?)))
+            .collect::<Result<HashMap<String, TableScalar>, ArrowScalarError>>()?;
         Ok(TableRow { values })
     }
 }
@@ -33,7 +35,11 @@ impl RowValuable for Table {
 impl Table {
     fn roll_back(&mut self, elements: Vec<String>, mut row: TableRow) -> TableRow {
         for element in elements {
-            if let Some(value) = self.values.get_mut(&element).and_then(|values| values.pop()) {
+            if let Some(value) = self
+                .values
+                .get_mut(&element)
+                .and_then(|values| values.pop())
+            {
                 row.values.insert(element.to_string(), value);
             }
         }

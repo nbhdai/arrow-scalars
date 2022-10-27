@@ -1,7 +1,45 @@
-use crate::data_type_proto::{EmptyMessage};
-use crate::{DataTypeProto, ArrowScalarError};
+use crate::data_type_proto::EmptyMessage;
 use crate::{data_type_proto, FieldProto};
+use crate::{ArrowScalarError, DataTypeProto};
 use arrow::datatypes::*;
+
+impl data_type_proto::TimeUnit {
+    pub fn to_arrow(&self) -> TimeUnit {
+        match self {
+            data_type_proto::TimeUnit::Second => TimeUnit::Second,
+            data_type_proto::TimeUnit::Microsecond => TimeUnit::Microsecond,
+            data_type_proto::TimeUnit::Millisecond => TimeUnit::Millisecond,
+            data_type_proto::TimeUnit::Nanosecond => TimeUnit::Nanosecond,
+        }
+    }
+
+    pub fn from_arrow(field: &TimeUnit) -> Self {
+        match field {
+            TimeUnit::Second => data_type_proto::TimeUnit::Second,
+            TimeUnit::Microsecond => data_type_proto::TimeUnit::Microsecond,
+            TimeUnit::Millisecond => data_type_proto::TimeUnit::Millisecond,
+            TimeUnit::Nanosecond => data_type_proto::TimeUnit::Nanosecond,
+        }
+    }
+}
+
+impl data_type_proto::IntervalUnit {
+    pub fn to_arrow(&self) -> IntervalUnit {
+        match self {
+            data_type_proto::IntervalUnit::YearMonth => IntervalUnit::YearMonth,
+            data_type_proto::IntervalUnit::DayTime => IntervalUnit::DayTime,
+            data_type_proto::IntervalUnit::MonthDayNano => IntervalUnit::MonthDayNano,
+        }
+    }
+
+    pub fn from_arrow(field: &IntervalUnit) -> Self {
+        match field {
+            IntervalUnit::YearMonth => data_type_proto::IntervalUnit::YearMonth,
+            IntervalUnit::DayTime => data_type_proto::IntervalUnit::DayTime,
+            IntervalUnit::MonthDayNano => data_type_proto::IntervalUnit::MonthDayNano,
+        }
+    }
+}
 
 impl FieldProto {
     pub fn to_arrow(&self) -> Result<Field, ArrowScalarError> {
@@ -21,7 +59,7 @@ impl FieldProto {
             data_type,
             nullable: field.is_nullable(),
         }
-    } 
+    }
 }
 
 impl DataTypeProto {
@@ -46,22 +84,32 @@ impl DataTypeProto {
                 data_type_proto::DataType::LargeUtf8(_) => DataType::LargeUtf8,
                 data_type_proto::DataType::Binary(_) => DataType::Binary,
                 data_type_proto::DataType::LargeBinary(_) => DataType::LargeBinary,
-                data_type_proto::DataType::FixedSizeBinary(size) => DataType::FixedSizeBinary(*size),
+                data_type_proto::DataType::FixedSizeBinary(size) => {
+                    DataType::FixedSizeBinary(*size)
+                }
                 data_type_proto::DataType::Time32(unit) => {
                     match data_type_proto::TimeUnit::from_i32(*unit) {
-                        Some(data_type_proto::TimeUnit::Second) => DataType::Time32(TimeUnit::Second),
-                        Some(data_type_proto::TimeUnit::Millisecond) => DataType::Time32(TimeUnit::Millisecond),
+                        Some(data_type_proto::TimeUnit::Second) => {
+                            DataType::Time32(TimeUnit::Second)
+                        }
+                        Some(data_type_proto::TimeUnit::Millisecond) => {
+                            DataType::Time32(TimeUnit::Millisecond)
+                        }
                         _ => return Err(ArrowScalarError::InvalidProtobuf),
                     }
                 }
                 data_type_proto::DataType::Time64(unit) => {
                     match data_type_proto::TimeUnit::from_i32(*unit) {
-                        Some(data_type_proto::TimeUnit::Microsecond) => DataType::Time64(TimeUnit::Microsecond),
-                        Some(data_type_proto::TimeUnit::Nanosecond) => DataType::Time64(TimeUnit::Nanosecond),
+                        Some(data_type_proto::TimeUnit::Microsecond) => {
+                            DataType::Time64(TimeUnit::Microsecond)
+                        }
+                        Some(data_type_proto::TimeUnit::Nanosecond) => {
+                            DataType::Time64(TimeUnit::Nanosecond)
+                        }
                         _ => return Err(ArrowScalarError::InvalidProtobuf),
                     }
                 }
-                data_type_proto::DataType::Timestamp(data_type_proto::Timestamp {unit, tz}) => {
+                data_type_proto::DataType::Timestamp(data_type_proto::Timestamp { unit, tz }) => {
                     let unit = match data_type_proto::TimeUnit::from_i32(*unit) {
                         Some(data_type_proto::TimeUnit::Second) => TimeUnit::Second,
                         Some(data_type_proto::TimeUnit::Millisecond) => TimeUnit::Millisecond,
@@ -85,7 +133,9 @@ impl DataTypeProto {
                     let unit = match data_type_proto::IntervalUnit::from_i32(*unit) {
                         Some(data_type_proto::IntervalUnit::DayTime) => IntervalUnit::DayTime,
                         Some(data_type_proto::IntervalUnit::YearMonth) => IntervalUnit::YearMonth,
-                        Some(data_type_proto::IntervalUnit::MonthDayNano) => IntervalUnit::MonthDayNano,
+                        Some(data_type_proto::IntervalUnit::MonthDayNano) => {
+                            IntervalUnit::MonthDayNano
+                        }
                         _ => return Err(ArrowScalarError::InvalidProtobuf),
                     };
                     DataType::Interval(unit)
@@ -97,18 +147,28 @@ impl DataTypeProto {
                     DataType::List(Box::new(field.to_arrow()?))
                 }
                 data_type_proto::DataType::FixedSizeList(fsl) => {
-                    let data_type_proto::FixedSizeList{list_type, size} = fsl.as_ref();
+                    let data_type_proto::FixedSizeList { list_type, size } = fsl.as_ref();
                     match list_type {
                         Some(field) => DataType::FixedSizeList(Box::new(field.to_arrow()?), *size),
                         None => return Err(ArrowScalarError::InvalidProtobuf),
                     }
                 }
-                data_type_proto::DataType::Struct(data_type_proto::Struct{fields}) => {
-                    let fields = fields.iter().map(|field| field.to_arrow()).collect::<Result<Vec<_>,_>>()?;
+                data_type_proto::DataType::Struct(data_type_proto::Struct { fields }) => {
+                    let fields = fields
+                        .iter()
+                        .map(|field| field.to_arrow())
+                        .collect::<Result<Vec<_>, _>>()?;
                     DataType::Struct(fields)
                 }
-                data_type_proto::DataType::Union(data_type_proto::Union{fields, type_ids, mode}) => {
-                    let fields = fields.iter().map(|field| field.to_arrow()).collect::<Result<Vec<_>,_>>()?;
+                data_type_proto::DataType::Union(data_type_proto::Union {
+                    fields,
+                    type_ids,
+                    mode,
+                }) => {
+                    let fields = fields
+                        .iter()
+                        .map(|field| field.to_arrow())
+                        .collect::<Result<Vec<_>, _>>()?;
                     let type_ids = type_ids.iter().map(|i| *i as i8).collect();
                     let mode = match data_type_proto::union::Mode::from_i32(*mode) {
                         Some(data_type_proto::union::Mode::Dense) => UnionMode::Dense,
@@ -118,22 +178,37 @@ impl DataTypeProto {
                     DataType::Union(fields, type_ids, mode)
                 }
                 data_type_proto::DataType::Dictionary(dict) => {
-                    let data_type_proto::Dictionary{key_type, value_type} = dict.as_ref();
+                    let data_type_proto::Dictionary {
+                        key_type,
+                        value_type,
+                    } = dict.as_ref();
                     match (key_type, value_type) {
-                        (Some(key_type),Some(value_type)) => {
-                            DataType::Dictionary(Box::new(key_type.to_arrow()?), Box::new(value_type.to_arrow()?))
-                        }
+                        (Some(key_type), Some(value_type)) => DataType::Dictionary(
+                            Box::new(key_type.to_arrow()?),
+                            Box::new(value_type.to_arrow()?),
+                        ),
                         _ => return Err(ArrowScalarError::InvalidProtobuf),
                     }
                 }
-                data_type_proto::DataType::Decimal128(data_type_proto::Decimal{precision, scale}) => {
-                    DataType::Decimal128((*precision).try_into().unwrap(), (*scale).try_into().unwrap())
-                }
-                data_type_proto::DataType::Decimal256(data_type_proto::Decimal{precision, scale}) => {
-                    DataType::Decimal256((*precision).try_into().unwrap(), (*scale).try_into().unwrap())
-                }
+                data_type_proto::DataType::Decimal128(data_type_proto::Decimal {
+                    precision,
+                    scale,
+                }) => DataType::Decimal128(
+                    (*precision).try_into().unwrap(),
+                    (*scale).try_into().unwrap(),
+                ),
+                data_type_proto::DataType::Decimal256(data_type_proto::Decimal {
+                    precision,
+                    scale,
+                }) => DataType::Decimal256(
+                    (*precision).try_into().unwrap(),
+                    (*scale).try_into().unwrap(),
+                ),
                 data_type_proto::DataType::Map(map) => {
-                    let data_type_proto::Map {struct_field, keys_sorted} = map.as_ref();
+                    let data_type_proto::Map {
+                        struct_field,
+                        keys_sorted,
+                    } = map.as_ref();
                     if let Some(field) = struct_field {
                         DataType::Map(Box::new(field.to_arrow()?), *keys_sorted)
                     } else {
@@ -215,14 +290,12 @@ impl DataTypeProto {
                     fields,
                 }))
             }
-            DataType::List(field) => {
-                
-                Some(data_type_proto::DataType::List(Box::new(FieldProto::from_arrow(field))))
-            }
-            DataType::LargeList(field) => {
-                Some(data_type_proto::DataType::List(Box::new(FieldProto::from_arrow(field))))
-                
-            }
+            DataType::List(field) => Some(data_type_proto::DataType::List(Box::new(
+                FieldProto::from_arrow(field),
+            ))),
+            DataType::LargeList(field) => Some(data_type_proto::DataType::List(Box::new(
+                FieldProto::from_arrow(field),
+            ))),
             DataType::FixedSizeList(field, size) => {
                 let list_type = Some(Box::new(FieldProto::from_arrow(field)));
 
@@ -260,9 +333,7 @@ impl DataTypeProto {
             DataType::Union(fields, type_ids, union_mode) => {
                 let fields = fields
                     .iter()
-                    .map(|field| {
-                        FieldProto::from_arrow(field)
-                    })
+                    .map(|field| FieldProto::from_arrow(field))
                     .collect();
                 let type_ids = type_ids.iter().map(|type_id| *type_id as i32).collect();
                 let mode = match union_mode {
