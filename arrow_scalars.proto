@@ -1,4 +1,4 @@
-// Version 0.1.0
+// Version 0.2.0
 
 syntax = "proto3";
 package arrow_scalars;
@@ -7,6 +7,10 @@ message FieldProto {
   string name = 1;
   DataTypeProto data_type = 2;
   bool nullable = 3;
+}
+
+message SchemaProto {
+    repeated FieldProto fields = 1;
 }
 
 message DataTypeProto {

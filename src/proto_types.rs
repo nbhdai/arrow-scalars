@@ -1,5 +1,5 @@
 use crate::data_type_proto::EmptyMessage;
-use crate::{data_type_proto, FieldProto};
+use crate::{data_type_proto, FieldProto, SchemaProto};
 use crate::{ArrowScalarError, DataTypeProto};
 use arrow::datatypes::*;
 
@@ -59,6 +59,18 @@ impl FieldProto {
             data_type,
             nullable: field.is_nullable(),
         }
+    }
+}
+
+impl SchemaProto {
+    pub fn to_arrow(&self) -> Result<Schema, ArrowScalarError> {
+        let fields = self.fields.iter().map(|field| field.to_arrow()).collect::<Result<Vec<_>,_>>()?;
+        Ok(Schema::new(fields))
+    }
+
+    pub fn from_arrow(schema: &Schema) -> Self {
+        let fields = schema.fields().iter().map(|field| FieldProto::from_arrow(field)).collect();
+        SchemaProto { fields }
     }
 }
 
