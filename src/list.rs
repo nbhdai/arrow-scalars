@@ -694,31 +694,31 @@ impl<T: Array> ListValuable for T {
             DataType::Union(_fields, type_ids, mode) => {
                 return Err(ArrowScalarError::Unimplemented(
                     "clone_as_list".to_string(),
-                    format!("Union({:?}, {:?})", type_ids, mode),
+                    format!("Union({type_ids:?}, {mode:?})"),
                 ));
             }
             DataType::Dictionary(key_type, value_type) => {
                 return Err(ArrowScalarError::Unimplemented(
                     "clone_as_list".to_string(),
-                    format!("Dictionary({:?}, {:?})", key_type, value_type),
+                    format!("Dictionary({key_type:?}, {value_type:?})"),
                 ));
             }
             DataType::Decimal128(precision, scale) => {
                 return Err(ArrowScalarError::Unimplemented(
                     "clone_as_list".to_string(),
-                    format!("Decimal128({:?}, {:?})", precision, scale),
+                    format!("Decimal128({precision:?}, {scale:?})"),
                 ));
             }
             DataType::Decimal256(precision, scale) => {
                 return Err(ArrowScalarError::Unimplemented(
                     "clone_as_list".to_string(),
-                    format!("Decimal256({:?}, {:?})", precision, scale),
+                    format!("Decimal256({precision:?}, {scale:?})"),
                 ));
             }
             DataType::Map(key_type, value_type) => {
                 return Err(ArrowScalarError::Unimplemented(
                     "clone_as_list".to_string(),
-                    format!("Map({:?}, {:?})", key_type, value_type),
+                    format!("Map({key_type:?}, {value_type:?})"),
                 ));
             }
             DataType::Null => {
@@ -2091,7 +2091,7 @@ impl TableList {
                     _ => {
                         return Err(ArrowScalarError::Unimplemented(
                             "TableList::to_array".to_string(),
-                            format!("{:?}", list_data_type),
+                            format!("{list_data_type:?}"),
                         ))
                     }
                 }
@@ -2146,7 +2146,7 @@ impl TableList {
                     _ => {
                         return Err(ArrowScalarError::Unimplemented(
                             "TableList::to_array".to_string(),
-                            format!("{:?}", list_data_type),
+                            format!("{list_data_type:?}"),
                         ))
                     }
                 }
@@ -2293,7 +2293,7 @@ impl TableList {
                 let mut builder = Date32Builder::new();
                 for (i, value) in list.values.iter().enumerate() {
                     if list.set[i] {
-                        builder.append_value(*value as i32);
+                        builder.append_value(*value);
                     } else {
                         builder.append_null();
                     }
@@ -2316,7 +2316,7 @@ impl TableList {
                     let mut builder = DurationSecondBuilder::new();
                     for (i, value) in list.durations.iter().enumerate() {
                         if list.set[i] {
-                            builder.append_value(*value as i64);
+                            builder.append_value(*value);
                         } else {
                             builder.append_null();
                         }
@@ -2327,7 +2327,7 @@ impl TableList {
                     let mut builder = DurationMillisecondBuilder::new();
                     for (i, value) in list.durations.iter().enumerate() {
                         if list.set[i] {
-                            builder.append_value(*value as i64);
+                            builder.append_value(*value);
                         } else {
                             builder.append_null();
                         }
@@ -2338,7 +2338,7 @@ impl TableList {
                     let mut builder = DurationMicrosecondBuilder::new();
                     for (i, value) in list.durations.iter().enumerate() {
                         if list.set[i] {
-                            builder.append_value(*value as i64);
+                            builder.append_value(*value);
                         } else {
                             builder.append_null();
                         }
@@ -2349,7 +2349,7 @@ impl TableList {
                     let mut builder = DurationNanosecondBuilder::new();
                     for (i, value) in list.durations.iter().enumerate() {
                         if list.set[i] {
-                            builder.append_value(*value as i64);
+                            builder.append_value(*value);
                         } else {
                             builder.append_null();
                         }
@@ -2373,7 +2373,7 @@ impl TableList {
                     let mut builder = IntervalDayTimeBuilder::new();
                     for (i, value) in list.intervals.iter().enumerate() {
                         if list.set[i] {
-                            builder.append_value(*value as i64);
+                            builder.append_value(*value);
                         } else {
                             builder.append_null();
                         }

@@ -69,7 +69,7 @@ impl SchemaProto {
     }
 
     pub fn from_arrow(schema: &Schema) -> Self {
-        let fields = schema.fields().iter().map(|field| FieldProto::from_arrow(field)).collect();
+        let fields = schema.fields().iter().map(FieldProto::from_arrow).collect();
         SchemaProto { fields }
     }
 }
@@ -345,7 +345,7 @@ impl DataTypeProto {
             DataType::Union(fields, type_ids, union_mode) => {
                 let fields = fields
                     .iter()
-                    .map(|field| FieldProto::from_arrow(field))
+                    .map(FieldProto::from_arrow)
                     .collect();
                 let type_ids = type_ids.iter().map(|type_id| *type_id as i32).collect();
                 let mode = match union_mode {
