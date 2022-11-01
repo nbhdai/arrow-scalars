@@ -1,7 +1,13 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
-use crate::{ArrowScalarError, ScalarValuable, Table, TableRow, TableScalar, TableList, table_list};
-use arrow::{record_batch::RecordBatch, datatypes::{Schema, Field}};
+use crate::{
+    table_list, ArrowScalarError, ListValuable, ScalarValuable, Table, TableList, TableRow,
+    TableScalar,
+};
+use arrow::{
+    datatypes::{Field, Schema},
+    record_batch::RecordBatch,
+};
 
 pub trait RowValuable {
     fn row(&self, index: usize) -> Result<TableRow, ArrowScalarError>;
@@ -40,13 +46,20 @@ impl RowValuable for Table {
     }
 
     fn column_value(&self, column: &str, index: usize) -> Result<TableScalar, ArrowScalarError> {
-        self.values.get(column).and_then(|column| Some(column.scalar(index))).unwrap_or(Err(ArrowScalarError::AccessError))
+        self.values
+            .get(column)
+            .and_then(|column| Some(column.scalar(index)))
+            .unwrap_or(Err(ArrowScalarError::AccessError))
     }
 }
 
 impl Table {
     pub fn new(schema: &Schema) -> Result<Self, ArrowScalarError> {
-        let values = schema.fields().iter().map(|field| Ok((field.name().to_owned(), TableList::new(field.data_type())?))).collect::<Result<HashMap<String, TableList>,ArrowScalarError>>()?;
+        let values = schema
+            .fields()
+            .iter()
+            .map(|field| Ok((field.name().to_owned(), TableList::new(field.data_type())?)))
+            .collect::<Result<HashMap<String, TableList>, ArrowScalarError>>()?;
         Ok(Table { values })
     }
 
@@ -60,15 +73,42 @@ impl Table {
     }
 
     pub fn len(&self) -> usize {
-        self.values.iter().next().map(|(_,column)| column.len()).unwrap_or(0)
+        self.values
+            .iter()
+            .next()
+            .map(|(_, column)| column.len())
+            .unwrap_or(0)
     }
 
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
+    pub fn to_arrow(&self) -> Result<RecordBatch, ArrowScalarError> {
+        let columns = self
+            .values
+            .iter()
+            .map(|(_name, column)| column.to_array())
+            .collect::<Result<Vec<_>, ArrowScalarError>>()?;
+        let schema = Arc::new(self.schema()?);
+        RecordBatch::try_new(schema, columns).map_err(|err| ArrowScalarError::ArrowError(err))
+    }
+
+    pub fn from_arrow(&self, records: &RecordBatch) -> Result<Self, ArrowScalarError> {
+        let schema = records.schema();
+        let values = schema
+            .fields()
+            .iter()
+            .zip(records.columns())
+            .map(|(field, column)| Ok((field.name().to_owned(), column.clone_as_list()?)))
+            .collect::<Result<HashMap<_, _>, ArrowScalarError>>()?;
+        Ok(Self { values })
+    }
+
     pub fn column(&self, key: &str) -> Option<&table_list::Values> {
-        self.values.get(key).and_then(|column| column.values.as_ref())
+        self.values
+            .get(key)
+            .and_then(|column| column.values.as_ref())
     }
 
     fn roll_back(&mut self, elements: Vec<String>, mut row: TableRow) -> TableRow {

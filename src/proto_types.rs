@@ -64,7 +64,11 @@ impl FieldProto {
 
 impl SchemaProto {
     pub fn to_arrow(&self) -> Result<Schema, ArrowScalarError> {
-        let fields = self.fields.iter().map(|field| field.to_arrow()).collect::<Result<Vec<_>,_>>()?;
+        let fields = self
+            .fields
+            .iter()
+            .map(|field| field.to_arrow())
+            .collect::<Result<Vec<_>, _>>()?;
         Ok(Schema::new(fields))
     }
 
@@ -343,10 +347,7 @@ impl DataTypeProto {
                 )),
             },
             DataType::Union(fields, type_ids, union_mode) => {
-                let fields = fields
-                    .iter()
-                    .map(FieldProto::from_arrow)
-                    .collect();
+                let fields = fields.iter().map(FieldProto::from_arrow).collect();
                 let type_ids = type_ids.iter().map(|type_id| *type_id as i32).collect();
                 let mode = match union_mode {
                     UnionMode::Sparse => data_type_proto::union::Mode::Sparse,

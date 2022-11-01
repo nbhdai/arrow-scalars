@@ -1,4 +1,5 @@
 mod scalar;
+use arrow::error::ArrowError;
 pub use scalar::*;
 mod time;
 pub use time::*;
@@ -20,4 +21,6 @@ pub enum ArrowScalarError {
     InvalidProtobuf,
     #[error("Out of Bounds Access Error")]
     AccessError,
+    #[error("Arrow Error: `{0}`")]
+    ArrowError(ArrowError),
 }
