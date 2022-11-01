@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::{ArrowScalarError, ScalarValuable, Table, TableRow, TableScalar, TableList};
-use arrow::{record_batch::RecordBatch, datatypes::Schema};
+use arrow::{record_batch::RecordBatch, datatypes::{Schema, Field}};
 
 pub trait RowValuable {
     fn row_value(&self, index: usize) -> Result<TableRow, ArrowScalarError>;
@@ -36,6 +36,23 @@ impl Table {
     pub fn new(schema: &Schema) -> Result<Self, ArrowScalarError> {
         let values = schema.fields().iter().map(|field| Ok((field.name().to_owned(), TableList::new(field.data_type())?))).collect::<Result<HashMap<String, TableList>,ArrowScalarError>>()?;
         Ok(Table { values })
+    }
+
+    pub fn schema(&self) -> Result<Schema, ArrowScalarError> {
+        let fields = self
+            .values
+            .iter()
+            .map(|(name, column)| Ok(Field::new(name, column.data_type()?, true)))
+            .collect::<Result<Vec<Field>, ArrowScalarError>>()?;
+        Ok(Schema::new(fields))
+    }
+
+    pub fn len(&self) -> usize {
+        self.values.iter().next().map(|(_,column)| column.len()).unwrap_or(0)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
     fn roll_back(&mut self, elements: Vec<String>, mut row: TableRow) -> TableRow {
