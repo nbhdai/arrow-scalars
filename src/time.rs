@@ -1,4 +1,5 @@
-use crate::{data_type_proto, table_scalar};
+use crate::{data_type_proto, table_scalar, table_list::TimeList};
+use arrow::{array::{Array, as_primitive_array}, datatypes::*};
 use chrono::Timelike;
 
 use prost_types::Timestamp;
@@ -122,6 +123,64 @@ impl IntoScalarTime for Timestamp {
     fn scalar_nanoseconds_from_midnight(&self) -> table_scalar::Time {
         let dt = chrono::NaiveDateTime::from_timestamp(self.seconds, self.nanos as u32);
         dt.time().scalar_nanoseconds_from_midnight()
+    }
+}
+
+pub trait TimeArray {
+    fn value_chrono(&self, index: usize) -> Option<chrono::NaiveDateTime>;
+    fn value_timestamp(&self, index: usize) -> Option<Timestamp> {
+        self.value_chrono(index).map(|dt|  Timestamp {
+            seconds: dt.timestamp(),
+            nanos: dt.timestamp_subsec_nanos() as i32,
+        })
+    }
+}
+
+// todo: Test this 
+impl TimeArray for TimeList {
+    fn value_chrono(&self, index: usize) -> Option<chrono::NaiveDateTime> {
+        let time = self.times[index];
+        let chrono = match self.unit() {
+            data_type_proto::TimeUnit::Second => chrono::NaiveDateTime::from_timestamp(time, 0),
+            data_type_proto::TimeUnit::Millisecond => chrono::NaiveDateTime::from_timestamp(
+                time / 1000,
+                (time as u32 % 1000) * 1_000_000,
+            ),
+            data_type_proto::TimeUnit::Microsecond => chrono::NaiveDateTime::from_timestamp(
+                time / 1_000_000,
+                (time as u32 % 1_000_000) * 1_000,
+            ),
+            data_type_proto::TimeUnit::Nanosecond => chrono::NaiveDateTime::from_timestamp(
+                time / 1_000_000_000,
+                time as u32 % 1_000_000_000,
+            ),
+        };
+        Some(chrono)
+    }
+}
+
+impl<T: AsRef<dyn Array>> TimeArray for T {
+    fn value_chrono(&self, index: usize) -> Option<chrono::NaiveDateTime> {
+        let arr = self.as_ref();
+        match arr.data_type() {
+            DataType::Timestamp(unit, _tz) => match unit {
+                TimeUnit::Second => as_primitive_array::<TimestampSecondType>(arr).value_as_datetime(index),
+                TimeUnit::Millisecond => as_primitive_array::<TimestampMillisecondType>(arr).value_as_datetime(index),
+                TimeUnit::Microsecond => as_primitive_array::<TimestampMicrosecondType>(arr).value_as_datetime(index),
+                TimeUnit::Nanosecond => as_primitive_array::<TimestampNanosecondType>(arr).value_as_datetime(index),
+            },
+            DataType::Time32(unit) => match unit {
+                TimeUnit::Second => as_primitive_array::<Time32SecondType>(arr).value_as_datetime(index),
+                TimeUnit::Millisecond => as_primitive_array::<Time32MillisecondType>(arr).value_as_datetime(index),
+                _ => None,
+            },
+            DataType::Time64(unit) => match unit {
+                TimeUnit::Microsecond => as_primitive_array::<Time64MicrosecondType>(arr).value_as_datetime(index),
+                TimeUnit::Nanosecond => as_primitive_array::<Time64NanosecondType>(arr).value_as_datetime(index),
+                _ => None,
+            },
+            _ => None,
+        }
     }
 }
 
