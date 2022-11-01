@@ -18,4 +18,6 @@ pub enum ArrowScalarError {
     Unimplemented(String, String),
     #[error("Invalid Protobuf")]
     InvalidProtobuf,
+    #[error("Out of Bounds Access Error")]
+    AccessError,
 }

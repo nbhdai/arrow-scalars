@@ -1,14 +1,15 @@
 use std::collections::HashMap;
 
-use crate::{ArrowScalarError, ScalarValuable, Table, TableRow, TableScalar, TableList};
+use crate::{ArrowScalarError, ScalarValuable, Table, TableRow, TableScalar, TableList, table_list};
 use arrow::{record_batch::RecordBatch, datatypes::{Schema, Field}};
 
 pub trait RowValuable {
-    fn row_value(&self, index: usize) -> Result<TableRow, ArrowScalarError>;
+    fn row(&self, index: usize) -> Result<TableRow, ArrowScalarError>;
+    fn column_value(&self, column: &str, index: usize) -> Result<TableScalar, ArrowScalarError>;
 }
 
 impl RowValuable for RecordBatch {
-    fn row_value(&self, index: usize) -> Result<TableRow, ArrowScalarError> {
+    fn row(&self, index: usize) -> Result<TableRow, ArrowScalarError> {
         let mut row = TableRow::default();
 
         let schema = self.schema();
@@ -19,16 +20,27 @@ impl RowValuable for RecordBatch {
         }
         Ok(row)
     }
+    fn column_value(&self, column: &str, index: usize) -> Result<TableScalar, ArrowScalarError> {
+        if let Some((column_index, _field)) = self.schema().column_with_name(column) {
+            self.column(column_index).scalar(index)
+        } else {
+            Err(ArrowScalarError::AccessError)
+        }
+    }
 }
 
 impl RowValuable for Table {
-    fn row_value(&self, index: usize) -> Result<TableRow, ArrowScalarError> {
+    fn row(&self, index: usize) -> Result<TableRow, ArrowScalarError> {
         let values = self
             .values
             .iter()
             .map(|(name, column)| Ok((name.to_owned(), column.scalar(index)?)))
             .collect::<Result<HashMap<String, TableScalar>, ArrowScalarError>>()?;
         Ok(TableRow { values })
+    }
+
+    fn column_value(&self, column: &str, index: usize) -> Result<TableScalar, ArrowScalarError> {
+        self.values.get(column).and_then(|column| Some(column.scalar(index))).unwrap_or(Err(ArrowScalarError::AccessError))
     }
 }
 
@@ -53,6 +65,10 @@ impl Table {
 
     pub fn is_empty(&self) -> bool {
         self.len() == 0
+    }
+
+    pub fn column(&self, key: &str) -> Option<&table_list::Values> {
+        self.values.get(key).and_then(|column| column.values.as_ref())
     }
 
     fn roll_back(&mut self, elements: Vec<String>, mut row: TableRow) -> TableRow {
