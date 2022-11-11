@@ -636,7 +636,7 @@ impl<T: Array> ListValuable for T {
                 let array = as_struct_array(self);
                 let fields = fields
                     .iter()
-                    .map(|f| FieldProto::from_arrow(f))
+                    .map(FieldProto::from_arrow)
                     .collect::<Vec<_>>();
 
                 let set = (0..array.len()).map(|i| array.is_valid(i)).collect();
@@ -647,31 +647,31 @@ impl<T: Array> ListValuable for T {
                 let struct_list = table_list::StructList { fields, values, set };
                 Some(table_list::Values::Struct(struct_list))
             }
-            DataType::Union(_fields, type_ids, mode) => {
+            DataType::Union(_fields, _type_ids, _mode) => {
                 return Err(ArrowScalarError::Unimplemented(
                     "clone_as_list",
                     "Union",
                 ));
             }
-            DataType::Dictionary(key_type, value_type) => {
+            DataType::Dictionary(_key_type, _value_type) => {
                 return Err(ArrowScalarError::Unimplemented(
                     "clone_as_list",
                     "Dictionary",
                 ));
             }
-            DataType::Decimal128(precision, scale) => {
+            DataType::Decimal128(_precision, _scale) => {
                 return Err(ArrowScalarError::Unimplemented(
                     "clone_as_list",
                     "Decimal128",
                 ));
             }
-            DataType::Decimal256(precision, scale) => {
+            DataType::Decimal256(_precision, _scale) => {
                 return Err(ArrowScalarError::Unimplemented(
                     "clone_as_list",
                     "Decimal256",
                 ));
             }
-            DataType::Map(key_type, value_type) => {
+            DataType::Map(_key_type, _value_type) => {
                 return Err(ArrowScalarError::Unimplemented(
                     "clone_as_list",
                     "Map",
@@ -1244,11 +1244,11 @@ impl TableList {
             DataType::Struct(fields) => {
                 let values = fields
                     .iter()
-                    .map(|field| Ok(TableList::new(field.data_type())?))
+                    .map(|field| TableList::new(field.data_type()))
                     .collect::<Result<Vec<_>, _>>()?;
                 let fields = fields
                     .iter()
-                    .map(|field| FieldProto::from_arrow(field))
+                    .map(FieldProto::from_arrow)
                     .collect::<Vec<_>>();
                 table_list::Values::Struct(table_list::StructList {
                     values,

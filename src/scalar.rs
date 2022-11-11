@@ -100,12 +100,12 @@ impl<T: Array> ScalarValuable for T {
             DataType::Time32(unit) => match unit {
                 TimeUnit::Second => {
                     let array = as_primitive_array::<Time32SecondType>(self);
-                    Some(table_scalar::Value::Time32Second(array.value(i).into()))
+                    Some(table_scalar::Value::Time32Second(array.value(i)))
                 }
                 TimeUnit::Millisecond => {
                     let array = as_primitive_array::<Time32MillisecondType>(self);
                     Some(table_scalar::Value::Time32Millisecond(
-                        array.value(i).into(),
+                        array.value(i),
                     ))
                 }
                 _ => unreachable!(),
@@ -114,36 +114,36 @@ impl<T: Array> ScalarValuable for T {
                 TimeUnit::Microsecond => {
                     let array = as_primitive_array::<Time64MicrosecondType>(self);
                     Some(table_scalar::Value::Time64Microsecond(
-                        array.value(i).into(),
+                        array.value(i),
                     ))
                 }
                 TimeUnit::Nanosecond => {
                     let array = as_primitive_array::<Time64NanosecondType>(self);
-                    Some(table_scalar::Value::Time64Nanosecond(array.value(i).into()))
+                    Some(table_scalar::Value::Time64Nanosecond(array.value(i)))
                 }
                 _ => unreachable!(),
             },
             DataType::Timestamp(unit, _tz) => match unit {
                 TimeUnit::Second => {
                     let array = as_primitive_array::<TimestampSecondType>(self);
-                    Some(table_scalar::Value::TimestampSecond(array.value(i).into()))
+                    Some(table_scalar::Value::TimestampSecond(array.value(i)))
                 }
                 TimeUnit::Millisecond => {
                     let array = as_primitive_array::<TimestampMillisecondType>(self);
                     Some(table_scalar::Value::TimestampMillisecond(
-                        array.value(i).into(),
+                        array.value(i),
                     ))
                 }
                 TimeUnit::Microsecond => {
                     let array = as_primitive_array::<TimestampMicrosecondType>(self);
                     Some(table_scalar::Value::TimestampMicrosecond(
-                        array.value(i).into(),
+                        array.value(i),
                     ))
                 }
                 TimeUnit::Nanosecond => {
                     let array = as_primitive_array::<TimestampNanosecondType>(self);
                     Some(table_scalar::Value::TimestampNanosecond(
-                        array.value(i).into(),
+                        array.value(i),
                     ))
                 }
             },

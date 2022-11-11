@@ -59,11 +59,11 @@ impl RowValuable for Table {
 
 impl Table {
     pub fn new(schema: &Schema) -> Result<Self, ArrowScalarError> {
-        let fields = schema.fields().iter().map(|field| FieldProto::from_arrow(field)).collect();
+        let fields = schema.fields().iter().map(FieldProto::from_arrow).collect();
         let values = schema
             .fields()
             .iter()
-            .map(|field| Ok(TableList::new(field.data_type())?))
+            .map(|field| TableList::new(field.data_type()))
             .collect::<Result<Vec<TableList>, ArrowScalarError>>()?;
         Ok(Table { fields, values })
     }
@@ -105,12 +105,12 @@ impl Table {
             .map(|column| column.to_array())
             .collect::<Result<Vec<_>, ArrowScalarError>>()?;
         let schema = Arc::new(self.schema()?);
-        RecordBatch::try_new(schema, columns).map_err(|err| ArrowScalarError::ArrowError(err))
+        RecordBatch::try_new(schema, columns).map_err(ArrowScalarError::ArrowError)
     }
 
     pub fn from_arrow(records: &RecordBatch) -> Result<Self, ArrowScalarError> {
         let schema = records.schema();
-        let fields = schema.fields().iter().map(|field| FieldProto::from_arrow(field)).collect();
+        let fields = schema.fields().iter().map(FieldProto::from_arrow).collect();
         let values = records.columns().iter()
             .map(|column| column.clone_as_list())
             .collect::<Result<Vec<_>, ArrowScalarError>>()?;
@@ -118,7 +118,7 @@ impl Table {
     }
 
     pub fn column(&self, i: usize) -> Option<&TableList> {
-        self.values.get(i).map(|column| column)
+        self.values.get(i)
     }
 
     fn roll_back(&mut self, index: usize, mut row: TableRow) -> TableRow {
