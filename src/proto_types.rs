@@ -230,15 +230,15 @@ impl DataTypeProto {
             DataType::LargeBinary => Some(data_type_proto::DataType::LargeBinary(EmptyMessage {})),
             DataType::Time32(data_type) => match data_type {
                 TimeUnit::Second => Some(data_type_proto::DataType::Time32Second(EmptyMessage {})),
-                TimeUnit::Millisecond => {
-                    Some(data_type_proto::DataType::Time32Millisecond(EmptyMessage {}))
-                }
+                TimeUnit::Millisecond => Some(data_type_proto::DataType::Time32Millisecond(
+                    EmptyMessage {},
+                )),
                 _ => None,
             },
             DataType::Time64(data_type) => match data_type {
-                TimeUnit::Microsecond => {
-                    Some(data_type_proto::DataType::Time64Microsecond(EmptyMessage {}))
-                }
+                TimeUnit::Microsecond => Some(data_type_proto::DataType::Time64Microsecond(
+                    EmptyMessage {},
+                )),
                 TimeUnit::Nanosecond => {
                     Some(data_type_proto::DataType::Time64Nanosecond(EmptyMessage {}))
                 }
@@ -302,9 +302,15 @@ impl DataTypeProto {
                 Some(data_type_proto::DataType::FixedSizeBinary(*size))
             }
             DataType::Interval(interval_type) => match interval_type {
-                IntervalUnit::YearMonth => Some(data_type_proto::DataType::IntervalYearMonth(EmptyMessage {})),
-                IntervalUnit::DayTime => Some(data_type_proto::DataType::IntervalDayTime(EmptyMessage {})),
-                IntervalUnit::MonthDayNano => Some(data_type_proto::DataType::IntervalMonthDayNano(EmptyMessage {})),
+                IntervalUnit::YearMonth => Some(data_type_proto::DataType::IntervalYearMonth(
+                    EmptyMessage {},
+                )),
+                IntervalUnit::DayTime => {
+                    Some(data_type_proto::DataType::IntervalDayTime(EmptyMessage {}))
+                }
+                IntervalUnit::MonthDayNano => Some(
+                    data_type_proto::DataType::IntervalMonthDayNano(EmptyMessage {}),
+                ),
             },
             DataType::Union(fields, type_ids, union_mode) => {
                 let fields = fields.iter().map(FieldProto::from_arrow).collect();
@@ -320,10 +326,18 @@ impl DataTypeProto {
                 }))
             }
             DataType::Duration(data_type) => match data_type {
-                TimeUnit::Second => Some(data_type_proto::DataType::DurationSecond(EmptyMessage {})),
-                TimeUnit::Millisecond => Some(data_type_proto::DataType::DurationMillisecond(EmptyMessage {})),
-                TimeUnit::Microsecond => Some(data_type_proto::DataType::DurationMicrosecond(EmptyMessage {})),
-                TimeUnit::Nanosecond => Some(data_type_proto::DataType::DurationNanosecond(EmptyMessage {})),
+                TimeUnit::Second => {
+                    Some(data_type_proto::DataType::DurationSecond(EmptyMessage {}))
+                }
+                TimeUnit::Millisecond => Some(data_type_proto::DataType::DurationMillisecond(
+                    EmptyMessage {},
+                )),
+                TimeUnit::Microsecond => Some(data_type_proto::DataType::DurationMicrosecond(
+                    EmptyMessage {},
+                )),
+                TimeUnit::Nanosecond => Some(data_type_proto::DataType::DurationNanosecond(
+                    EmptyMessage {},
+                )),
             },
             DataType::Decimal128(precision, scale) => Some(data_type_proto::DataType::Decimal128(
                 data_type_proto::Decimal {

@@ -292,7 +292,7 @@ pub mod table_scalar {
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct TableList {
-    #[prost(oneof="table_list::Values", tags="1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40")]
+    #[prost(oneof="table_list::Values", tags="2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40")]
     pub values: ::core::option::Option<table_list::Values>,
 }
 /// Nested message and enum types in `TableList`.
@@ -433,9 +433,11 @@ pub mod table_list {
     }
     #[derive(Clone, PartialEq, ::prost::Message)]
     pub struct StructList {
-        #[prost(map="string, message", tag="1")]
-        pub values: ::std::collections::HashMap<::prost::alloc::string::String, super::TableList>,
-        #[prost(bool, repeated, tag="2")]
+        #[prost(message, repeated, tag="1")]
+        pub fields: ::prost::alloc::vec::Vec<super::FieldProto>,
+        #[prost(message, repeated, tag="2")]
+        pub values: ::prost::alloc::vec::Vec<super::TableList>,
+        #[prost(bool, repeated, tag="3")]
         pub set: ::prost::alloc::vec::Vec<bool>,
     }
     #[derive(Clone, PartialEq, ::prost::Message)]
@@ -458,7 +460,7 @@ pub mod table_list {
     }
     #[derive(Clone, PartialEq, ::prost::Oneof)]
     pub enum Values {
-        #[prost(message, tag="1")]
+        #[prost(message, tag="2")]
         Boolean(BooleanList),
         #[prost(message, tag="3")]
         Int8(Int8List),
@@ -545,6 +547,8 @@ pub struct TableRow {
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Table {
-    #[prost(map="string, message", tag="1")]
-    pub values: ::std::collections::HashMap<::prost::alloc::string::String, TableList>,
+    #[prost(message, repeated, tag="1")]
+    pub fields: ::prost::alloc::vec::Vec<FieldProto>,
+    #[prost(message, repeated, tag="2")]
+    pub values: ::prost::alloc::vec::Vec<TableList>,
 }

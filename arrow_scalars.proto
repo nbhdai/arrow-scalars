@@ -243,8 +243,9 @@ message TableList {
         repeated bool set = 3;
     }
     message StructList {
-        map<string,TableList> values = 1;
-        repeated bool set = 2;
+        repeated FieldProto fields = 1;
+        repeated TableList values = 2;
+        repeated bool set = 3;
     }
     message UnionList {
         repeated TableScalar values = 1;
@@ -256,9 +257,8 @@ message TableList {
         FieldProto list_type = 3;
         optional int32 size = 4;
     }
-
     oneof values {
-        BooleanList boolean = 1;
+        BooleanList boolean = 2;
         Int8List int8 = 3;
         Int16List int16 = 4;
         Int32List int32 = 5;
@@ -309,5 +309,6 @@ message TableRow {
 }
 
 message Table {
-    map<string, TableList> values = 1;
+    repeated FieldProto fields = 1;
+    repeated TableList values = 2;
 }

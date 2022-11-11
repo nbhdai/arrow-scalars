@@ -1,5 +1,5 @@
 use crate::list::ListValuable;
-use crate::{table_scalar, ArrowScalarError, TableScalar, TableList};
+use crate::{table_scalar, ArrowScalarError, TableList, TableScalar};
 use arrow::array::*;
 use arrow::datatypes::*;
 use half::f16;
@@ -97,60 +97,56 @@ impl<T: Array> ScalarValuable for T {
                 let array = as_largestring_array(self);
                 Some(table_scalar::Value::LargeUtf8(array.value(i).into()))
             }
-            DataType::Time32(unit) => {
-                match unit {
-                    TimeUnit::Second => {
-                        let array = as_primitive_array::<Time32SecondType>(self);
-                        Some(table_scalar::Value::Time32Second(array.value(i).into()))
-                    }
-                    TimeUnit::Millisecond => {
-                        let array = as_primitive_array::<Time32MillisecondType>(self);
-                        Some(table_scalar::Value::Time32Millisecond(array.value(i).into()))
-                    }
-                    _ => unreachable!(),
+            DataType::Time32(unit) => match unit {
+                TimeUnit::Second => {
+                    let array = as_primitive_array::<Time32SecondType>(self);
+                    Some(table_scalar::Value::Time32Second(array.value(i).into()))
                 }
-            }
-            DataType::Time64(unit) => {
-                match unit {
-                    TimeUnit::Microsecond => {
-                        let array = as_primitive_array::<Time64MicrosecondType>(self);
-                        Some(table_scalar::Value::Time64Microsecond(array.value(i).into()))
-                    }
-                    TimeUnit::Nanosecond => {
-                        let array = as_primitive_array::<Time64NanosecondType>(self);
-                        Some(table_scalar::Value::Time64Nanosecond(array.value(i).into()))
-                    }
-                    _ => unreachable!(),
+                TimeUnit::Millisecond => {
+                    let array = as_primitive_array::<Time32MillisecondType>(self);
+                    Some(table_scalar::Value::Time32Millisecond(
+                        array.value(i).into(),
+                    ))
                 }
-            }
-            DataType::Timestamp(unit, _tz) => {
-                match unit {
-                    TimeUnit::Second => {
-                        let array = as_primitive_array::<TimestampSecondType>(self);
-                        Some(table_scalar::Value::TimestampSecond(
-                            array.value(i).into()
-                        ))
-                    }
-                    TimeUnit::Millisecond => {
-                        let array = as_primitive_array::<TimestampMillisecondType>(self);
-                        Some(table_scalar::Value::TimestampMillisecond(
-                            array.value(i).into()
-                        ))
-                    }
-                    TimeUnit::Microsecond => {
-                        let array = as_primitive_array::<TimestampMicrosecondType>(self);
-                        Some(table_scalar::Value::TimestampMicrosecond(
-                            array.value(i).into()
-                        ))
-                    }
-                    TimeUnit::Nanosecond => {
-                        let array = as_primitive_array::<TimestampNanosecondType>(self);
-                        Some(table_scalar::Value::TimestampNanosecond(
-                            array.value(i).into()
-                        ))
-                    }
+                _ => unreachable!(),
+            },
+            DataType::Time64(unit) => match unit {
+                TimeUnit::Microsecond => {
+                    let array = as_primitive_array::<Time64MicrosecondType>(self);
+                    Some(table_scalar::Value::Time64Microsecond(
+                        array.value(i).into(),
+                    ))
                 }
-            }
+                TimeUnit::Nanosecond => {
+                    let array = as_primitive_array::<Time64NanosecondType>(self);
+                    Some(table_scalar::Value::Time64Nanosecond(array.value(i).into()))
+                }
+                _ => unreachable!(),
+            },
+            DataType::Timestamp(unit, _tz) => match unit {
+                TimeUnit::Second => {
+                    let array = as_primitive_array::<TimestampSecondType>(self);
+                    Some(table_scalar::Value::TimestampSecond(array.value(i).into()))
+                }
+                TimeUnit::Millisecond => {
+                    let array = as_primitive_array::<TimestampMillisecondType>(self);
+                    Some(table_scalar::Value::TimestampMillisecond(
+                        array.value(i).into(),
+                    ))
+                }
+                TimeUnit::Microsecond => {
+                    let array = as_primitive_array::<TimestampMicrosecondType>(self);
+                    Some(table_scalar::Value::TimestampMicrosecond(
+                        array.value(i).into(),
+                    ))
+                }
+                TimeUnit::Nanosecond => {
+                    let array = as_primitive_array::<TimestampNanosecondType>(self);
+                    Some(table_scalar::Value::TimestampNanosecond(
+                        array.value(i).into(),
+                    ))
+                }
+            },
             DataType::Interval(interval) => {
                 let value = match interval {
                     IntervalUnit::YearMonth => table_scalar::Value::IntervalYearMonth(
@@ -160,31 +156,32 @@ impl<T: Array> ScalarValuable for T {
                         as_primitive_array::<IntervalDayTimeType>(self).value(i),
                     ),
                     IntervalUnit::MonthDayNano => {
-                        return Err(ArrowScalarError::Unimplemented("Array::scalar".to_string(), "IntervalMonthDayNano".to_string()))
+                        return Err(ArrowScalarError::Unimplemented(
+                            "Array::scalar".to_string(),
+                            "IntervalMonthDayNano".to_string(),
+                        ))
                     }
                 };
                 Some(value)
             }
-            DataType::Duration(unit) => {
-                match unit {
-                    TimeUnit::Second => {
-                        let array = as_primitive_array::<DurationSecondType>(self);
-                        Some(table_scalar::Value::DurationSecond(array.value(i)))
-                    }
-                    TimeUnit::Millisecond => {
-                        let array = as_primitive_array::<DurationMillisecondType>(self);
-                        Some(table_scalar::Value::DurationMillisecond(array.value(i)))
-                    }
-                    TimeUnit::Microsecond => {
-                        let array = as_primitive_array::<DurationMicrosecondType>(self);
-                        Some(table_scalar::Value::DurationMicrosecond(array.value(i)))
-                    }
-                    TimeUnit::Nanosecond => {
-                        let array = as_primitive_array::<DurationNanosecondType>(self);
-                        Some(table_scalar::Value::DurationNanosecond(array.value(i)))
-                    }                    
+            DataType::Duration(unit) => match unit {
+                TimeUnit::Second => {
+                    let array = as_primitive_array::<DurationSecondType>(self);
+                    Some(table_scalar::Value::DurationSecond(array.value(i)))
                 }
-            }
+                TimeUnit::Millisecond => {
+                    let array = as_primitive_array::<DurationMillisecondType>(self);
+                    Some(table_scalar::Value::DurationMillisecond(array.value(i)))
+                }
+                TimeUnit::Microsecond => {
+                    let array = as_primitive_array::<DurationMicrosecondType>(self);
+                    Some(table_scalar::Value::DurationMicrosecond(array.value(i)))
+                }
+                TimeUnit::Nanosecond => {
+                    let array = as_primitive_array::<DurationNanosecondType>(self);
+                    Some(table_scalar::Value::DurationNanosecond(array.value(i)))
+                }
+            },
             DataType::Struct(_) => {
                 let arrays = as_struct_array(self);
                 let elements: Result<HashMap<String, TableScalar>, ArrowScalarError> = arrays
@@ -348,9 +345,7 @@ impl TableScalar {
             Some(table_scalar::Value::IntervalDayTime(_)) => {
                 DataType::Interval(IntervalUnit::DayTime)
             }
-            Some(table_scalar::Value::DurationSecond(_)) => {
-                DataType::Duration(TimeUnit::Second)
-            }
+            Some(table_scalar::Value::DurationSecond(_)) => DataType::Duration(TimeUnit::Second),
             Some(table_scalar::Value::DurationMillisecond(_)) => {
                 DataType::Duration(TimeUnit::Millisecond)
             }
@@ -360,29 +355,21 @@ impl TableScalar {
             Some(table_scalar::Value::DurationNanosecond(_)) => {
                 DataType::Duration(TimeUnit::Nanosecond)
             }
-            Some(table_scalar::Value::List(list)) => DataType::List(Box::new(Field::new(
-                "item",
-                list.data_type()?,
-                false,
-            ))),
-            Some(table_scalar::Value::LargeList(list)) => DataType::LargeList(Box::new(Field::new(
-                "item",
-                list.data_type()?,
-                false,
-            ))),
-            Some(table_scalar::Value::FixedSizeList(list)) => {
-                DataType::FixedSizeList(Box::new(Field::new("item", list.data_type()?, false)), list.len() as i32)
+            Some(table_scalar::Value::List(list)) => {
+                DataType::List(Box::new(Field::new("item", list.data_type()?, false)))
             }
+            Some(table_scalar::Value::LargeList(list)) => {
+                DataType::LargeList(Box::new(Field::new("item", list.data_type()?, false)))
+            }
+            Some(table_scalar::Value::FixedSizeList(list)) => DataType::FixedSizeList(
+                Box::new(Field::new("item", list.data_type()?, false)),
+                list.len() as i32,
+            ),
             Some(table_scalar::Value::Struct(struct_)) => {
-                let fields = struct_.elements
+                let fields = struct_
+                    .elements
                     .iter()
-                    .map(|(name,field)| {
-                        Ok(Field::new(
-                            name,
-                            field.data_type()?,
-                            true,
-                        ))
-                    })
+                    .map(|(name, field)| Ok(Field::new(name, field.data_type()?, true)))
                     .collect::<Result<Vec<_>, ArrowScalarError>>()?;
                 DataType::Struct(fields)
             }
@@ -529,12 +516,16 @@ impl TableScalar {
     }
     pub fn interval_day_time(days: i32, millis: i32) -> Self {
         Self {
-            value: Some(table_scalar::Value::IntervalDayTime(IntervalDayTimeType::make_value(days, millis))),
+            value: Some(table_scalar::Value::IntervalDayTime(
+                IntervalDayTimeType::make_value(days, millis),
+            )),
         }
     }
     pub fn interval_year_month(years: i32, months: i32) -> Self {
         Self {
-            value: Some(table_scalar::Value::IntervalYearMonth(IntervalYearMonthType::make_value(years, months))),
+            value: Some(table_scalar::Value::IntervalYearMonth(
+                IntervalYearMonthType::make_value(years, months),
+            )),
         }
     }
     pub fn duration_second(value: i64) -> Self {
@@ -587,25 +578,24 @@ impl TableScalar {
             value: Some(table_scalar::Value::FixedSizeList(value.try_into()?)),
         })
     }
-    pub fn struct_(value: HashMap<String,Self>) -> Self {
+    pub fn struct_(value: HashMap<String, Self>) -> Self {
         Self {
-            value: Some(table_scalar::Value::Struct(table_scalar::Struct { elements: value })),
+            value: Some(table_scalar::Value::Struct(table_scalar::Struct {
+                elements: value,
+            })),
         }
     }
-
 }
 
 impl TryFrom<Vec<TableScalar>> for TableList {
     type Error = ArrowScalarError;
     fn try_from(v: Vec<TableScalar>) -> Result<Self, Self::Error> {
-        let dtype = if let Some(dtype) = v
-            .first()
-            .map(|v| v.data_type()) {
+        let dtype = if let Some(dtype) = v.first().map(|v| v.data_type()) {
             dtype?
         } else {
-            return Ok(TableList {values: None});
+            return Ok(TableList { values: None });
         };
-        
+
         let mut list = TableList::new(&dtype)?;
         for v in v {
             list.push(v)?;
