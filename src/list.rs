@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::table_scalar::{Duration, Time};
 use crate::ScalarValuable;
 use crate::{
     data_type_proto, table_list, table_scalar, ArrowScalarError, DataTypeProto, FieldProto,
@@ -9,6 +8,7 @@ use crate::{
 };
 use arrow::array::*;
 use arrow::datatypes::*;
+use chrono::{NaiveDateTime, Datelike, Timelike, NaiveTime, NaiveDate};
 use half::f16;
 
 pub trait ListValuable {
@@ -337,12 +337,11 @@ impl<T: Array> ListValuable for T {
                     }
                     let tz = tz.as_ref().map(|tz| tz.to_string());
                     let time_list = table_list::TimeList {
-                        unit: data_type_proto::TimeUnit::Second.into(),
                         tz,
                         times,
                         set,
                     };
-                    Some(table_list::Values::Timestamp(time_list))
+                    Some(table_list::Values::TimestampSecond(time_list))
                 }
                 TimeUnit::Millisecond => {
                     let array = as_primitive_array::<TimestampMillisecondType>(self);
@@ -358,12 +357,11 @@ impl<T: Array> ListValuable for T {
                     }
                     let tz = tz.as_ref().map(|tz| tz.to_string());
                     let time_list = table_list::TimeList {
-                        unit: data_type_proto::TimeUnit::Millisecond.into(),
                         tz,
                         times,
                         set,
                     };
-                    Some(table_list::Values::Timestamp(time_list))
+                    Some(table_list::Values::TimestampMillisecond(time_list))
                 }
                 TimeUnit::Microsecond => {
                     let array = as_primitive_array::<TimestampMicrosecondType>(self);
@@ -379,12 +377,11 @@ impl<T: Array> ListValuable for T {
                     }
                     let tz = tz.as_ref().map(|tz| tz.to_string());
                     let time_list = table_list::TimeList {
-                        unit: data_type_proto::TimeUnit::Microsecond.into(),
                         tz,
                         times,
                         set,
                     };
-                    Some(table_list::Values::Timestamp(time_list))
+                    Some(table_list::Values::TimestampMicrosecond(time_list))
                 }
                 TimeUnit::Nanosecond => {
                     let array = as_primitive_array::<TimestampNanosecondType>(self);
@@ -400,12 +397,11 @@ impl<T: Array> ListValuable for T {
                     }
                     let tz = tz.as_ref().map(|tz| tz.to_string());
                     let time_list = table_list::TimeList {
-                        unit: data_type_proto::TimeUnit::Nanosecond.into(),
                         tz,
                         times,
                         set,
                     };
-                    Some(table_list::Values::Timestamp(time_list))
+                    Some(table_list::Values::TimestampNanosecond(time_list))
                 }
             },
             DataType::Time32(time_unit) => match time_unit {
@@ -415,19 +411,17 @@ impl<T: Array> ListValuable for T {
                     let mut set = Vec::with_capacity(array.len());
                     for i in 0..array.len() {
                         if !array.is_null(i) {
-                            times.push(array.value(i) as i64);
+                            times.push(array.value(i));
                         } else {
-                            times.push(Time32SecondType::default_value() as i64);
+                            times.push(Time32SecondType::default_value());
                         }
                         set.push(!array.is_null(i));
                     }
-                    let time_list = table_list::TimeList {
-                        unit: data_type_proto::TimeUnit::Second.into(),
-                        tz: None,
-                        times,
+                    let time_list = table_list::Int32List {
+                        values: times,
                         set,
                     };
-                    Some(table_list::Values::Time32(time_list))
+                    Some(table_list::Values::Time32Second(time_list))
                 }
                 TimeUnit::Millisecond => {
                     let array = as_primitive_array::<Time32MillisecondType>(self);
@@ -435,19 +429,17 @@ impl<T: Array> ListValuable for T {
                     let mut set = Vec::with_capacity(array.len());
                     for i in 0..array.len() {
                         if !array.is_null(i) {
-                            times.push(array.value(i) as i64);
+                            times.push(array.value(i));
                         } else {
-                            times.push(Time32MillisecondType::default_value() as i64);
+                            times.push(Time32MillisecondType::default_value());
                         }
                         set.push(!array.is_null(i));
                     }
-                    let time_list = table_list::TimeList {
-                        unit: data_type_proto::TimeUnit::Millisecond.into(),
-                        tz: None,
-                        times,
+                    let time_list = table_list::Int32List {
+                        values: times,
                         set,
                     };
-                    Some(table_list::Values::Time32(time_list))
+                    Some(table_list::Values::Time32Millisecond(time_list))
                 }
                 _ => None,
             },
@@ -464,13 +456,11 @@ impl<T: Array> ListValuable for T {
                         }
                         set.push(!array.is_null(i));
                     }
-                    let time_list = table_list::TimeList {
-                        unit: data_type_proto::TimeUnit::Microsecond.into(),
-                        tz: None,
-                        times,
+                    let time_list = table_list::Int64List {
+                        values: times,
                         set,
                     };
-                    Some(table_list::Values::Time64(time_list))
+                    Some(table_list::Values::Time64Microsecond(time_list))
                 }
                 TimeUnit::Nanosecond => {
                     let array = as_primitive_array::<Time64NanosecondType>(self);
@@ -484,13 +474,11 @@ impl<T: Array> ListValuable for T {
                         }
                         set.push(!array.is_null(i));
                     }
-                    let time_list = table_list::TimeList {
-                        unit: data_type_proto::TimeUnit::Nanosecond.into(),
-                        tz: None,
-                        times,
+                    let time_list = table_list::Int64List {
+                        values: times,
                         set,
                     };
-                    Some(table_list::Values::Time64(time_list))
+                    Some(table_list::Values::Time64Nanosecond(time_list))
                 }
                 _ => None,
             },
@@ -567,12 +555,11 @@ impl<T: Array> ListValuable for T {
                         }
                         set.push(!array.is_null(i));
                     }
-                    let time_list = table_list::DurationList {
-                        unit: data_type_proto::TimeUnit::Second.into(),
-                        durations,
+                    let time_list = table_list::Int64List {
+                        values: durations,
                         set,
                     };
-                    Some(table_list::Values::Duration(time_list))
+                    Some(table_list::Values::DurationSecond(time_list))
                 }
                 TimeUnit::Millisecond => {
                     let array = as_primitive_array::<DurationMillisecondType>(self);
@@ -586,12 +573,11 @@ impl<T: Array> ListValuable for T {
                         }
                         set.push(!array.is_null(i));
                     }
-                    let time_list = table_list::DurationList {
-                        unit: data_type_proto::TimeUnit::Millisecond.into(),
-                        durations,
+                    let time_list = table_list::Int64List {
+                        values: durations,
                         set,
                     };
-                    Some(table_list::Values::Duration(time_list))
+                    Some(table_list::Values::DurationMillisecond(time_list))
                 }
                 TimeUnit::Microsecond => {
                     let array = as_primitive_array::<DurationMicrosecondType>(self);
@@ -605,12 +591,11 @@ impl<T: Array> ListValuable for T {
                         }
                         set.push(!array.is_null(i));
                     }
-                    let time_list = table_list::DurationList {
-                        unit: data_type_proto::TimeUnit::Microsecond.into(),
-                        durations,
+                    let time_list = table_list::Int64List {
+                        values: durations,
                         set,
                     };
-                    Some(table_list::Values::Duration(time_list))
+                    Some(table_list::Values::DurationMicrosecond(time_list))
                 }
                 TimeUnit::Nanosecond => {
                     let array = as_primitive_array::<DurationNanosecondType>(self);
@@ -624,12 +609,11 @@ impl<T: Array> ListValuable for T {
                         }
                         set.push(!array.is_null(i));
                     }
-                    let time_list = table_list::DurationList {
-                        unit: data_type_proto::TimeUnit::Nanosecond.into(),
-                        durations,
+                    let time_list = table_list::Int64List {
+                        values: durations,
                         set,
                     };
-                    Some(table_list::Values::Duration(time_list))
+                    Some(table_list::Values::DurationNanosecond(time_list))
                 }
             },
             DataType::Interval(interval_unit) => match interval_unit {
@@ -639,18 +623,17 @@ impl<T: Array> ListValuable for T {
                     let mut set = Vec::with_capacity(array.len());
                     for i in 0..array.len() {
                         if !array.is_null(i) {
-                            intervals.push(array.value(i) as i64);
+                            intervals.push(array.value(i));
                         } else {
-                            intervals.push(IntervalYearMonthType::default_value() as i64);
+                            intervals.push(IntervalYearMonthType::default_value());
                         }
                         set.push(!array.is_null(i));
                     }
-                    let interval_list = table_list::IntervalList {
-                        unit: data_type_proto::IntervalUnit::YearMonth.into(),
-                        intervals,
+                    let interval_list = table_list::Int32List {
+                        values: intervals,
                         set,
                     };
-                    Some(table_list::Values::Interval(interval_list))
+                    Some(table_list::Values::IntervalYearMonth(interval_list))
                 }
                 IntervalUnit::DayTime => {
                     let array = as_primitive_array::<IntervalDayTimeType>(self);
@@ -664,12 +647,11 @@ impl<T: Array> ListValuable for T {
                         }
                         set.push(!array.is_null(i));
                     }
-                    let interval_list = table_list::IntervalList {
-                        unit: data_type_proto::IntervalUnit::DayTime.into(),
-                        intervals,
+                    let interval_list = table_list::Int64List {
+                        values: intervals,
                         set,
                     };
-                    Some(table_list::Values::Interval(interval_list))
+                    Some(table_list::Values::IntervalDayTime(interval_list))
                 }
                 IntervalUnit::MonthDayNano => {
                     return Err(ArrowScalarError::Unimplemented(
@@ -912,19 +894,6 @@ impl ScalarValuable for TableList {
                     TableScalar { value: None }
                 }
             }
-            Some(table_list::Values::Timestamp(list)) => {
-                let unit = list.unit;
-                let time = list.times[i];
-                let tz = list.tz.clone();
-                let time = Time { unit, time, tz };
-                if list.set[i] {
-                    TableScalar {
-                        value: Some(table_scalar::Value::Timestamp(time)),
-                    }
-                } else {
-                    TableScalar { value: None }
-                }
-            }
             Some(table_list::Values::Date32(list)) => {
                 let value = list.values[i];
                 if list.set[i] {
@@ -945,52 +914,141 @@ impl ScalarValuable for TableList {
                     TableScalar { value: None }
                 }
             }
-            Some(table_list::Values::Time32(list)) => {
-                let unit = list.unit;
-                let time = list.times[i];
-                let tz = list.tz.clone();
-                let time = Time { unit, time, tz };
+            Some(table_list::Values::Time32Second(list)) => {
+                let value = list.values[i];
                 if list.set[i] {
                     TableScalar {
-                        value: Some(table_scalar::Value::Time32(time)),
+                        value: Some(table_scalar::Value::Time32Second(value)),
                     }
                 } else {
                     TableScalar { value: None }
                 }
             }
-            Some(table_list::Values::Time64(list)) => {
-                let unit = list.unit;
-                let time = list.times[i];
-                let tz = list.tz.clone();
-                let time = Time { unit, time, tz };
+            Some(table_list::Values::Time32Millisecond(list)) => {
+                let value = list.values[i];
                 if list.set[i] {
                     TableScalar {
-                        value: Some(table_scalar::Value::Time64(time)),
+                        value: Some(table_scalar::Value::Time32Millisecond(value)),
                     }
                 } else {
                     TableScalar { value: None }
                 }
             }
-            Some(table_list::Values::Interval(list)) => {
+            Some(table_list::Values::Time64Microsecond(list)) => {
+                let value = list.values[i];
                 if list.set[i] {
-                    let interval = list.intervals[i];
-                    let interval = Some(match list.unit() {
-                        data_type_proto::IntervalUnit::YearMonth => {
-                            table_scalar::interval::Interval::YearMonth(interval as i32)
-                        }
-                        data_type_proto::IntervalUnit::DayTime => {
-                            table_scalar::interval::Interval::DayTime(interval)
-                        }
-                        data_type_proto::IntervalUnit::MonthDayNano => {
-                            return Err(ArrowScalarError::Unimplemented(
-                                "TableList::scalar".to_string(),
-                                "MonthDayNano".to_string(),
-                            ))
-                        }
-                    });
-                    let interval = table_scalar::Interval { interval };
                     TableScalar {
-                        value: Some(table_scalar::Value::Interval(interval)),
+                        value: Some(table_scalar::Value::Time64Microsecond(value)),
+                    }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::Time64Nanosecond(list)) => {
+                let value = list.values[i];
+                if list.set[i] {
+                    TableScalar {
+                        value: Some(table_scalar::Value::Time64Nanosecond(value)),
+                    }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::DurationSecond(list)) => {
+                let value = list.values[i];
+                if list.set[i] {
+                    TableScalar {
+                        value: Some(table_scalar::Value::DurationSecond(value)),
+                    }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::DurationMillisecond(list)) => {
+                let value = list.values[i];
+                if list.set[i] {
+                    TableScalar {
+                        value: Some(table_scalar::Value::DurationMillisecond(value)),
+                    }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::DurationMicrosecond(list)) => {
+                let value = list.values[i];
+                if list.set[i] {
+                    TableScalar {
+                        value: Some(table_scalar::Value::DurationMicrosecond(value)),
+                    }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::DurationNanosecond(list)) => {
+                let value = list.values[i];
+                if list.set[i] {
+                    TableScalar {
+                        value: Some(table_scalar::Value::DurationNanosecond(value)),
+                    }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::IntervalYearMonth(list)) => {
+                let value = list.values[i];
+                if list.set[i] {
+                    TableScalar {
+                        value: Some(table_scalar::Value::IntervalYearMonth(value)),
+                    }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::IntervalDayTime(list)) => {
+                let value = list.values[i];
+                if list.set[i] {
+                    TableScalar {
+                        value: Some(table_scalar::Value::IntervalDayTime(value)),
+                    }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::TimestampSecond(list)) => {
+                let value = list.times[i];
+                if list.set[i] {
+                    TableScalar {
+                        value: Some(table_scalar::Value::TimestampSecond(value)),
+                    }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::TimestampMillisecond(list)) => {
+                let value = list.times[i];
+                if list.set[i] {
+                    TableScalar {
+                        value: Some(table_scalar::Value::TimestampMillisecond(value)),
+                    }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::TimestampMicrosecond(list)) => {
+                let value = list.times[i];
+                if list.set[i] {
+                    TableScalar {
+                        value: Some(table_scalar::Value::TimestampMicrosecond(value)),
+                    }
+                } else {
+                    TableScalar { value: None }
+                }
+            }
+            Some(table_list::Values::TimestampNanosecond(list)) => {
+                let value = list.times[i];
+                if list.set[i] {
+                    TableScalar {
+                        value: Some(table_scalar::Value::TimestampNanosecond(value)),
                     }
                 } else {
                     TableScalar { value: None }
@@ -1046,18 +1104,6 @@ impl ScalarValuable for TableList {
                 if list.set[i] {
                     TableScalar {
                         value: Some(table_scalar::Value::FixedSizeList(value)),
-                    }
-                } else {
-                    TableScalar { value: None }
-                }
-            }
-            Some(table_list::Values::Duration(list)) => {
-                let unit = list.unit;
-                let duration = list.durations[i];
-                let duration = Duration { unit, duration };
-                if list.set[i] {
-                    TableScalar {
-                        value: Some(table_scalar::Value::Duration(duration)),
                     }
                 } else {
                     TableScalar { value: None }
@@ -1128,27 +1174,55 @@ impl TableList {
             }
             DataType::Utf8 => table_list::Values::Utf8(table_list::Utf8List::default()),
             DataType::LargeUtf8 => table_list::Values::LargeUtf8(table_list::Utf8List::default()),
-            DataType::Duration(unit) => table_list::Values::Duration(table_list::DurationList {
-                unit: data_type_proto::TimeUnit::from_arrow(unit).into(),
-                ..Default::default()
-            }),
-            DataType::Time32(unit) => table_list::Values::Time32(table_list::TimeList {
-                unit: data_type_proto::TimeUnit::from_arrow(unit).into(),
-                ..Default::default()
-            }),
-            DataType::Time64(unit) => table_list::Values::Time64(table_list::TimeList {
-                unit: data_type_proto::TimeUnit::from_arrow(unit).into(),
-                ..Default::default()
-            }),
-            DataType::Timestamp(unit, tz) => table_list::Values::Time64(table_list::TimeList {
-                unit: data_type_proto::TimeUnit::from_arrow(unit).into(),
-                tz: tz.to_owned(),
-                ..Default::default()
-            }),
-            DataType::Interval(unit) => table_list::Values::Interval(table_list::IntervalList {
-                unit: data_type_proto::IntervalUnit::from_arrow(unit).into(),
-                ..Default::default()
-            }),
+            DataType::Time32(unit) => {
+                match unit {
+                    TimeUnit::Second => table_list::Values::Time32Second(table_list::Int32List::default()),
+                    TimeUnit::Millisecond => table_list::Values::Time32Millisecond(table_list::Int32List::default()),
+                    _ => unreachable!(),
+                }
+            }
+            DataType::Time64(unit) => {
+                match unit {
+                    TimeUnit::Microsecond => table_list::Values::Time64Microsecond(table_list::Int64List::default()),
+                    TimeUnit::Nanosecond => table_list::Values::Time64Nanosecond(table_list::Int64List::default()),
+                    _ => unreachable!(),
+                }
+            }
+            DataType::Timestamp(unit, tz) => {
+                match unit {
+                    TimeUnit::Second => table_list::Values::TimestampSecond(table_list::TimeList {
+                        tz: tz.clone(),
+                        ..Default::default()
+                    }),
+                    TimeUnit::Millisecond => table_list::Values::TimestampMillisecond(table_list::TimeList {
+                        tz: tz.clone(),
+                        ..Default::default()
+                    }),
+                    TimeUnit::Microsecond => table_list::Values::TimestampMicrosecond(table_list::TimeList {
+                        tz: tz.clone(),
+                        ..Default::default()
+                    }),
+                    TimeUnit::Nanosecond => table_list::Values::TimestampNanosecond(table_list::TimeList {
+                        tz: tz.clone(),
+                        ..Default::default()
+                    }),
+                }
+            }
+            DataType::Interval(unit) => {
+                match unit {
+                    IntervalUnit::YearMonth => table_list::Values::IntervalYearMonth(table_list::Int32List::default()),
+                    IntervalUnit::DayTime => table_list::Values::IntervalDayTime(table_list::Int64List::default()),
+                    IntervalUnit::MonthDayNano => return Err(ArrowScalarError::Unimplemented("TableList::new".to_string(),"IntervalUnit::MonthDayNano".to_string())),
+                }
+            }
+            DataType::Duration(unit) => {
+                match unit {
+                    TimeUnit::Second => table_list::Values::DurationSecond(table_list::Int64List::default()),
+                    TimeUnit::Millisecond => table_list::Values::DurationMillisecond(table_list::Int64List::default()),
+                    TimeUnit::Microsecond => table_list::Values::DurationMicrosecond(table_list::Int64List::default()),
+                    TimeUnit::Nanosecond => table_list::Values::DurationNanosecond(table_list::Int64List::default()),
+                }
+            }
             DataType::List(field) => table_list::Values::List(table_list::ListList {
                 list_type: Some(FieldProto::from_arrow(field)),
                 ..Default::default()
@@ -1209,9 +1283,9 @@ impl TableList {
         })
     }
 
-    pub fn push(&mut self, scalar: TableScalar) -> Result<(), TableScalar> {
+    pub fn push(&mut self, scalar: TableScalar) -> Result<(), ArrowScalarError> {
         if self.values.is_none() {
-            return Err(scalar);
+            return Err(ArrowScalarError::InvalidScalar(scalar));
         }
         if scalar.value.is_none() {
             self.push_null();
@@ -1330,112 +1404,25 @@ impl TableList {
                 values.push(b);
                 set.push(true);
             }
-            (
-                table_list::Values::Timestamp(table_list::TimeList {
-                    unit,
-                    times,
-                    tz,
-                    set,
-                })
-                | table_list::Values::Time32(table_list::TimeList {
-                    unit,
-                    times,
-                    tz,
-                    set,
-                })
-                | table_list::Values::Time64(table_list::TimeList {
-                    unit,
-                    times,
-                    tz,
-                    set,
-                }),
-                table_scalar::Value::Timestamp(b),
-            ) => {
-                if b.unit != *unit || b.tz != *tz {
-                    return Err(TableScalar {
-                        value: Some(table_scalar::Value::Timestamp(b)),
-                    });
-                }
-                times.push(b.time);
-                set.push(true);
-            }
-            (
-                table_list::Values::Timestamp(table_list::TimeList {
-                    unit,
-                    times,
-                    tz,
-                    set,
-                })
-                | table_list::Values::Time32(table_list::TimeList {
-                    unit,
-                    times,
-                    tz,
-                    set,
-                })
-                | table_list::Values::Time64(table_list::TimeList {
-                    unit,
-                    times,
-                    tz,
-                    set,
-                }),
-                table_scalar::Value::Time32(b),
-            ) => {
-                if b.unit != *unit || b.tz != *tz {
-                    return Err(TableScalar {
-                        value: Some(table_scalar::Value::Time32(b)),
-                    });
-                }
-                times.push(b.time);
-                set.push(true);
-            }
-            (
-                table_list::Values::Timestamp(table_list::TimeList {
-                    unit,
-                    times,
-                    tz,
-                    set,
-                })
-                | table_list::Values::Time32(table_list::TimeList {
-                    unit,
-                    times,
-                    tz,
-                    set,
-                })
-                | table_list::Values::Time64(table_list::TimeList {
-                    unit,
-                    times,
-                    tz,
-                    set,
-                }),
-                table_scalar::Value::Time64(b),
-            ) => {
-                if b.unit != *unit || b.tz != *tz {
-                    return Err(TableScalar {
-                        value: Some(table_scalar::Value::Time64(b)),
-                    });
-                }
-                times.push(b.time);
-                set.push(true);
-            }
             (table_list::Values::List(values), table_scalar::Value::List(list)) => {
                 if let Err(list) = values.push(list) {
-                    return Err(TableScalar {
+                    return Err(ArrowScalarError::InvalidScalar(TableScalar {
                         value: Some(table_scalar::Value::List(list)),
-                    });
+                    }));
                 }
             }
             (table_list::Values::LargeList(values), table_scalar::Value::List(list)) => {
                 if let Err(list) = values.push(list) {
-                    return Err(TableScalar {
+                    return Err(ArrowScalarError::InvalidScalar(TableScalar {
                         value: Some(table_scalar::Value::List(list)),
-                    });
+                    }));
                 }
             }
             (table_list::Values::FixedSizeList(values), table_scalar::Value::List(list)) => {
                 if let Err(list) = values.push(list) {
-                    return Err(TableScalar {
+                    return Err(ArrowScalarError::InvalidScalar(TableScalar {
                         value: Some(table_scalar::Value::List(list)),
-                    });
+                    }));
                 }
             }
             (table_list::Values::Struct(struct_list), table_scalar::Value::Struct(mut values)) => {
@@ -1449,9 +1436,9 @@ impl TableList {
                         value.push(values.elements.remove(field).unwrap())?;
                     }
                 } else {
-                    return Err(TableScalar {
+                    return Err(ArrowScalarError::InvalidScalar(TableScalar {
                         value: Some(table_scalar::Value::Struct(values)),
-                    });
+                    }));
                 }
             }
             (table_list::Values::Binary(values), table_scalar::Value::Binary(b)) => {
@@ -1464,44 +1451,27 @@ impl TableList {
             }
             (table_list::Values::FixedSizeBinary(values), table_scalar::Value::Binary(b)) => {
                 if values.size != Some(b.len() as i32) {
-                    return Err(TableScalar {
+                    return Err(ArrowScalarError::InvalidScalar(TableScalar {
                         value: Some(table_scalar::Value::Binary(b)),
-                    });
+                    }));
                 }
                 values.values.push(b);
                 values.set.push(true);
             }
-            (table_list::Values::Duration(values), table_scalar::Value::Duration(b)) => {
-                if values.unit != b.unit {
-                    return Err(TableScalar {
-                        value: Some(table_scalar::Value::Duration(b)),
-                    });
-                }
-                values.durations.push(b.duration);
+            (table_list::Values::Time32Second(values), table_scalar::Value::Time32Second(b)) => {
+                values.values.push(b);
                 values.set.push(true);
             }
-            (table_list::Values::Interval(values), table_scalar::Value::Interval(b)) => {
-                match (values.unit(), b.interval.as_ref().unwrap()) {
-                    (
-                        data_type_proto::IntervalUnit::YearMonth,
-                        table_scalar::interval::Interval::YearMonth(i),
-                    ) => {
-                        values.intervals.push(*i as i64);
-                        values.set.push(true);
-                    }
-                    (
-                        data_type_proto::IntervalUnit::DayTime,
-                        table_scalar::interval::Interval::DayTime(i),
-                    ) => {
-                        values.intervals.push(*i);
-                        values.set.push(true);
-                    }
-                    _ => {
-                        return Err(TableScalar {
-                            value: Some(table_scalar::Value::Interval(b)),
-                        });
-                    }
-                }
+            (table_list::Values::Time32Millisecond(values), table_scalar::Value::Time32Millisecond(b)) => {
+                values.values.push(b);
+                values.set.push(true);
+            }
+            (table_list::Values::Time64Microsecond(values), table_scalar::Value::Time64Microsecond(b)) => {
+                values.values.push(b);
+                values.set.push(true);
+            }
+            (table_list::Values::Time64Nanosecond(values), table_scalar::Value::Time64Nanosecond(b)) => {
+                values.values.push(b);
                 values.set.push(true);
             }
             (table_list::Values::Date32(values), table_scalar::Value::Date32(b)) => {
@@ -1509,6 +1479,46 @@ impl TableList {
                 values.set.push(true);
             }
             (table_list::Values::Date64(values), table_scalar::Value::Date64(b)) => {
+                values.values.push(b);
+                values.set.push(true);
+            }
+            (table_list::Values::TimestampSecond(values), table_scalar::Value::TimestampSecond(b)) => {
+                values.times.push(b);
+                values.set.push(true);
+            }
+            (table_list::Values::TimestampMillisecond(values), table_scalar::Value::TimestampMillisecond(b)) => {
+                values.times.push(b);
+                values.set.push(true);
+            }
+            (table_list::Values::TimestampMicrosecond(values), table_scalar::Value::TimestampMicrosecond(b)) => {
+                values.times.push(b);
+                values.set.push(true);
+            }
+            (table_list::Values::TimestampNanosecond(values), table_scalar::Value::TimestampNanosecond(b)) => {
+                values.times.push(b);
+                values.set.push(true);
+            }
+            (table_list::Values::IntervalYearMonth(values), table_scalar::Value::IntervalYearMonth(b)) => {
+                values.values.push(b);
+                values.set.push(true);
+            }
+            (table_list::Values::IntervalDayTime(values), table_scalar::Value::IntervalDayTime(b)) => {
+                values.values.push(b);
+                values.set.push(true);
+            }
+            (table_list::Values::DurationSecond(values), table_scalar::Value::DurationSecond(b)) => {
+                values.values.push(b);
+                values.set.push(true);
+            }
+            (table_list::Values::DurationMillisecond(values), table_scalar::Value::DurationMillisecond(b)) => {
+                values.values.push(b);
+                values.set.push(true);
+            }
+            (table_list::Values::DurationMicrosecond(values), table_scalar::Value::DurationMicrosecond(b)) => {
+                values.values.push(b);
+                values.set.push(true);
+            }
+            (table_list::Values::DurationNanosecond(values), table_scalar::Value::DurationNanosecond(b)) => {
                 values.values.push(b);
                 values.set.push(true);
             }
@@ -1521,7 +1531,7 @@ impl TableList {
                 values.set.push(true);
             }
             (_, val) => {
-                return Err(TableScalar { value: Some(val) });
+                return Err(ArrowScalarError::InvalidScalar(TableScalar { value: Some(val) }));
             }
         }
         Ok(())
@@ -1692,54 +1702,75 @@ impl TableList {
                 let set = set.pop();
                 pop_value_ret(value, set)
             }
-            table_list::Values::Time32(table_list::TimeList {
-                times,
-                unit,
-                tz,
+            table_list::Values::Time32Second(table_list::Int32List {
+                values,
                 set,
             }) => {
-                let value = times.pop().map(|time| {
-                    table_scalar::Value::Time32(table_scalar::Time {
-                        unit: *unit,
-                        time,
-                        tz: tz.to_owned(),
-                    })
-                });
+                let value = values.pop().map(table_scalar::Value::Time32Second);
                 let set = set.pop();
                 pop_value_ret(value, set)
             }
-            table_list::Values::Time64(table_list::TimeList {
-                times,
-                unit,
-                tz,
+            table_list::Values::Time32Millisecond(table_list::Int32List {
+                values,
                 set,
             }) => {
-                let value = times.pop().map(|time| {
-                    table_scalar::Value::Time64(table_scalar::Time {
-                        unit: *unit,
-                        time,
-                        tz: tz.to_owned(),
-                    })
-                });
+                let value = values.pop().map(table_scalar::Value::Time32Millisecond);
                 let set = set.pop();
                 pop_value_ret(value, set)
             }
-            table_list::Values::Timestamp(table_list::TimeList {
-                times,
-                unit,
-                tz,
+            table_list::Values::Time64Microsecond(table_list::Int64List {
+                values,
                 set,
             }) => {
-                let value = times.pop().map(|time| {
-                    table_scalar::Value::Timestamp(table_scalar::Time {
-                        unit: *unit,
-                        time,
-                        tz: tz.to_owned(),
-                    })
-                });
+                let value = values.pop().map(table_scalar::Value::Time64Microsecond);
                 let set = set.pop();
                 pop_value_ret(value, set)
             }
+            table_list::Values::Time64Nanosecond(table_list::Int64List {
+                values,
+                set,
+            }) => {
+                let value = values.pop().map(table_scalar::Value::Time64Nanosecond);
+                let set = set.pop();
+                pop_value_ret(value, set)
+            }
+            table_list::Values::TimestampSecond(table_list::TimeList {
+                times,
+                tz: _,
+                set,
+            }) => {
+                let value = times.pop().map(table_scalar::Value::TimestampSecond);
+                let set = set.pop();
+                pop_value_ret(value, set)
+            }
+            table_list::Values::TimestampMillisecond(table_list::TimeList {
+                times,
+                tz: _,
+                set,
+            }) => {
+                let value = times.pop().map(table_scalar::Value::TimestampMillisecond);
+                let set = set.pop();
+                pop_value_ret(value, set)
+            }
+            table_list::Values::TimestampMicrosecond(table_list::TimeList {
+                times,
+                tz: _,
+                set,
+            }) => {
+                let value = times.pop().map(table_scalar::Value::TimestampMicrosecond);
+                let set = set.pop();
+                pop_value_ret(value, set)
+            }
+            table_list::Values::TimestampNanosecond(table_list::TimeList {
+                times,
+                tz: _,
+                set,
+            }) => {
+                let value = times.pop().map(table_scalar::Value::TimestampNanosecond);
+                let set = set.pop();
+                pop_value_ret(value, set)
+            }
+            
             table_list::Values::Date32(table_list::Int32List { values, set }) => {
                 let value = values.pop().map(table_scalar::Value::Date32);
                 let set = set.pop();
@@ -1750,49 +1781,51 @@ impl TableList {
                 let set = set.pop();
                 pop_value_ret(value, set)
             }
-            table_list::Values::Interval(table_list::IntervalList {
-                intervals,
-                unit,
+            table_list::Values::IntervalYearMonth(table_list::Int32List {
+                values,
                 set,
             }) => {
-                let interval = match data_type_proto::IntervalUnit::from_i32(*unit) {
-                    None | Some(data_type_proto::IntervalUnit::MonthDayNano) => return None,
-                    Some(data_type_proto::IntervalUnit::YearMonth) => {
-                        data_type_proto::IntervalUnit::YearMonth
-                    }
-                    Some(data_type_proto::IntervalUnit::DayTime) => {
-                        data_type_proto::IntervalUnit::DayTime
-                    }
-                };
-                // todo: repair this
-                let value = intervals.pop().map(|time| {
-                    let interval = match interval {
-                        data_type_proto::IntervalUnit::YearMonth => {
-                            table_scalar::interval::Interval::YearMonth(time as i32)
-                        }
-                        data_type_proto::IntervalUnit::DayTime => {
-                            table_scalar::interval::Interval::DayTime(time)
-                        }
-                        _ => unreachable!(),
-                    };
-                    table_scalar::Value::Interval(table_scalar::Interval {
-                        interval: Some(interval),
-                    })
-                });
+                let value = values.pop().map(table_scalar::Value::IntervalYearMonth);
                 let set = set.pop();
                 pop_value_ret(value, set)
             }
-            table_list::Values::Duration(table_list::DurationList {
-                durations,
-                unit,
+            table_list::Values::IntervalDayTime(table_list::Int64List {
+                values,
                 set,
             }) => {
-                let value = durations.pop().map(|duration| {
-                    table_scalar::Value::Duration(table_scalar::Duration {
-                        duration,
-                        unit: *unit,
-                    })
-                });
+                let value = values.pop().map(table_scalar::Value::IntervalDayTime);
+                let set = set.pop();
+                pop_value_ret(value, set)
+            }
+            table_list::Values::DurationSecond(table_list::Int64List {
+                values,
+                set,
+            }) => {
+                let value = values.pop().map(table_scalar::Value::DurationSecond);
+                let set = set.pop();
+                pop_value_ret(value, set)
+            }
+            table_list::Values::DurationMillisecond(table_list::Int64List {
+                values,
+                set,
+            }) => {
+                let value = values.pop().map(table_scalar::Value::DurationMillisecond);
+                let set = set.pop();
+                pop_value_ret(value, set)
+            }
+            table_list::Values::DurationMicrosecond(table_list::Int64List {
+                values,
+                set,
+            }) => {
+                let value = values.pop().map(table_scalar::Value::DurationMicrosecond);
+                let set = set.pop();
+                pop_value_ret(value, set)
+            }
+            table_list::Values::DurationNanosecond(table_list::Int64List {
+                values,
+                set,
+            }) => {
+                let value = values.pop().map(table_scalar::Value::DurationNanosecond);
                 let set = set.pop();
                 pop_value_ret(value, set)
             }
@@ -1874,6 +1907,125 @@ impl TableList {
         }
     }
 
+    pub fn push_date_time(&mut self, time: NaiveDateTime) -> Result<(), NaiveDateTime> {
+        if let Some(values) = self.values.as_mut() {
+            match values {
+                table_list::Values::Date32(table_list::Int32List { values, set }) => {
+                    values.push(time.num_days_from_ce());
+                    set.push(true);
+                }
+                table_list::Values::Date64(table_list::Int64List { values, set }) => {
+                    values.push(time.timestamp_millis());
+                    set.push(true);
+                }
+                table_list::Values::TimestampSecond(table_list::TimeList {
+                    times,
+                    tz: _,
+                    set,
+                }) => {
+                    times.push(time.timestamp());
+                    set.push(true);
+                }
+                table_list::Values::TimestampMillisecond(table_list::TimeList {
+                    times,
+                    tz: _,
+                    set,
+                }) => {
+                    times.push(time.timestamp_millis());
+                    set.push(true);
+                }
+                table_list::Values::TimestampMicrosecond(table_list::TimeList {
+                    times,
+                    tz: _,
+                    set,
+                }) => {
+                    times.push(time.timestamp_nanos() * 1000);
+                    set.push(true);
+                }
+                table_list::Values::TimestampNanosecond(table_list::TimeList {
+                    times,
+                    tz: _,
+                    set,
+                }) => {
+                    times.push(time.timestamp_nanos());
+                    set.push(true);
+                }
+                table_list::Values::Time32Second(table_list::Int32List { values, set }) => {
+                    values.push(time.num_seconds_from_midnight() as i32);
+                    set.push(true);
+                }
+                table_list::Values::Time32Millisecond(table_list::Int32List { values, set }) => {
+                    let seconds: i64 = time.num_seconds_from_midnight().into();
+                    let milli: i64 = time.nanosecond().into();
+                    values.push((seconds * 1000 + milli / 1000000) as i32);
+                    set.push(true);
+                }
+                table_list::Values::Time64Microsecond(table_list::Int64List { values, set }) => {
+                    let seconds: i64 = time.num_seconds_from_midnight().into();
+                    let micro: i64 = time.nanosecond().into();
+                    values.push(seconds * 1000000 + micro / 1000);
+                    set.push(true);
+                }
+                table_list::Values::Time64Nanosecond(table_list::Int64List { values, set }) => {
+                    let seconds: i64 = time.num_seconds_from_midnight().into();
+                    let nano: i64 = time.nanosecond().into();
+                    values.push(seconds * 1000000000 + nano);
+                    set.push(true);
+                }
+                _ => return Err(time),
+            }
+        }
+        Ok(())
+    }
+
+    pub fn push_time(&mut self, time: NaiveTime) -> Result<(), NaiveTime> {
+        if let Some(values) = self.values.as_mut() {
+            match values {
+                table_list::Values::Time32Second(table_list::Int32List { values, set }) => {
+                    values.push(time.num_seconds_from_midnight() as i32);
+                    set.push(true);
+                }
+                table_list::Values::Time32Millisecond(table_list::Int32List { values, set }) => {
+                    let seconds: i64 = time.num_seconds_from_midnight().into();
+                    let milli: i64 = time.nanosecond().into();
+                    values.push((seconds * 1000 + milli / 1000000) as i32);
+                    set.push(true);
+                }
+                table_list::Values::Time64Microsecond(table_list::Int64List { values, set }) => {
+                    let seconds: i64 = time.num_seconds_from_midnight().into();
+                    let micro: i64 = time.nanosecond().into();
+                    values.push(seconds * 1000000 + micro / 1000);
+                    set.push(true);
+                }
+                table_list::Values::Time64Nanosecond(table_list::Int64List { values, set }) => {
+                    let seconds: i64 = time.num_seconds_from_midnight().into();
+                    let nano: i64 = time.nanosecond().into();
+                    values.push(seconds * 1000000000 + nano);
+                    set.push(true);
+                }
+                _ => return Err(time),
+            }
+        }
+        Ok(())
+    }
+
+    pub fn push_date(&mut self, date: NaiveDate) -> Result<(), NaiveDate> {
+        if let Some(values) = self.values.as_mut() {
+            match values {
+                table_list::Values::Date32(table_list::Int32List { values, set }) => {
+                    values.push(date.num_days_from_ce());
+                    set.push(true);
+                }
+                table_list::Values::Date64(table_list::Int64List { values, set }) => {
+                    values.push(date.and_hms(0, 0, 0).timestamp_millis());
+                    set.push(true);
+                }
+                _ => return Err(date),
+            }
+        }
+        Ok(())
+    }
+    
     pub fn to_array(&self) -> Result<ArrayRef, ArrowScalarError> {
         if self.values.is_none() {
             panic!("Cannot make an null list into an array.");
@@ -2183,112 +2335,96 @@ impl TableList {
                     .collect::<Result<Vec<_>, ArrowScalarError>>()?;
                 Arc::new(StructArray::from(arrays))
             }
-            table_list::Values::Timestamp(list) => match list.unit() {
-                data_type_proto::TimeUnit::Second => {
-                    let mut builder = TimestampSecondBuilder::new();
-                    for (i, value) in list.times.iter().enumerate() {
-                        if list.set[i] {
-                            builder.append_value(*value);
-                        } else {
-                            builder.append_null();
-                        }
+            table_list::Values::TimestampSecond(list) => {
+                let mut builder = TimestampSecondBuilder::new();
+                for (i, value) in list.times.iter().enumerate() {
+                    if list.set[i] {
+                        builder.append_value(*value);
+                    } else {
+                        builder.append_null();
                     }
-                    Arc::new(builder.finish()) as ArrayRef
                 }
-                data_type_proto::TimeUnit::Millisecond => {
-                    let mut builder = TimestampMillisecondBuilder::new();
-                    for (i, value) in list.times.iter().enumerate() {
-                        if list.set[i] {
-                            builder.append_value(*value);
-                        } else {
-                            builder.append_null();
-                        }
+                Arc::new(builder.finish())
+            }
+            table_list::Values::TimestampMillisecond(list) => {
+                let mut builder = TimestampMillisecondBuilder::new();
+                for (i, value) in list.times.iter().enumerate() {
+                    if list.set[i] {
+                        builder.append_value(*value);
+                    } else {
+                        builder.append_null();
                     }
-                    Arc::new(builder.finish())
                 }
-                data_type_proto::TimeUnit::Microsecond => {
-                    let mut builder = TimestampMicrosecondBuilder::new();
-                    for (i, value) in list.times.iter().enumerate() {
-                        if list.set[i] {
-                            builder.append_value(*value);
-                        } else {
-                            builder.append_null();
-                        }
+                Arc::new(builder.finish())
+            }
+            table_list::Values::TimestampMicrosecond(list) => {
+                let mut builder = TimestampMicrosecondBuilder::new();
+                for (i, value) in list.times.iter().enumerate() {
+                    if list.set[i] {
+                        builder.append_value(*value);
+                    } else {
+                        builder.append_null();
                     }
-                    Arc::new(builder.finish())
                 }
-                data_type_proto::TimeUnit::Nanosecond => {
-                    let mut builder = TimestampNanosecondBuilder::new();
-                    for (i, value) in list.times.iter().enumerate() {
-                        if list.set[i] {
-                            builder.append_value(*value);
-                        } else {
-                            builder.append_null();
-                        }
+                Arc::new(builder.finish())
+            }
+            table_list::Values::TimestampNanosecond(list) => {
+                let mut builder = TimestampNanosecondBuilder::new();
+                for (i, value) in list.times.iter().enumerate() {
+                    if list.set[i] {
+                        builder.append_value(*value);
+                    } else {
+                        builder.append_null();
                     }
-                    Arc::new(builder.finish())
                 }
-            },
-            table_list::Values::Time32(list) => match list.unit() {
-                data_type_proto::TimeUnit::Second => {
-                    let mut builder = Time32SecondBuilder::new();
-                    for (i, value) in list.times.iter().enumerate() {
-                        if list.set[i] {
-                            builder.append_value(*value as i32);
-                        } else {
-                            builder.append_null();
-                        }
+                Arc::new(builder.finish())
+            }
+
+            table_list::Values::Time32Second(list) => {
+                let mut builder = Time32SecondBuilder::new();
+                for (i, value) in list.values.iter().enumerate() {
+                    if list.set[i] {
+                        builder.append_value(*value);
+                    } else {
+                        builder.append_null();
                     }
-                    Arc::new(builder.finish()) as ArrayRef
                 }
-                data_type_proto::TimeUnit::Millisecond => {
-                    let mut builder = Time32MillisecondBuilder::new();
-                    for (i, value) in list.times.iter().enumerate() {
-                        if list.set[i] {
-                            builder.append_value(*value as i32);
-                        } else {
-                            builder.append_null();
-                        }
+                Arc::new(builder.finish())
+            }
+            table_list::Values::Time32Millisecond(list) => {
+                let mut builder = Time32MillisecondBuilder::new();
+                for (i, value) in list.values.iter().enumerate() {
+                    if list.set[i] {
+                        builder.append_value(*value);
+                    } else {
+                        builder.append_null();
                     }
-                    Arc::new(builder.finish())
                 }
-                _ => {
-                    return Err(ArrowScalarError::Unimplemented(
-                        "TableList::to_array".to_string(),
-                        format!("{:?}", list.unit()),
-                    ))
-                }
-            },
-            table_list::Values::Time64(list) => match list.unit() {
-                data_type_proto::TimeUnit::Microsecond => {
-                    let mut builder = Time64MicrosecondBuilder::new();
-                    for (i, value) in list.times.iter().enumerate() {
-                        if list.set[i] {
-                            builder.append_value(*value);
-                        } else {
-                            builder.append_null();
-                        }
+                Arc::new(builder.finish())
+            }
+            table_list::Values::Time64Microsecond(list) => {
+                let mut builder = Time64MicrosecondBuilder::new();
+                for (i, value) in list.values.iter().enumerate() {
+                    if list.set[i] {
+                        builder.append_value(*value);
+                    } else {
+                        builder.append_null();
                     }
-                    Arc::new(builder.finish()) as ArrayRef
                 }
-                data_type_proto::TimeUnit::Nanosecond => {
-                    let mut builder = Time64NanosecondBuilder::new();
-                    for (i, value) in list.times.iter().enumerate() {
-                        if list.set[i] {
-                            builder.append_value(*value);
-                        } else {
-                            builder.append_null();
-                        }
+                Arc::new(builder.finish())
+            }
+            table_list::Values::Time64Nanosecond(list) => {
+                let mut builder = Time64NanosecondBuilder::new();
+                for (i, value) in list.values.iter().enumerate() {
+                    if list.set[i] {
+                        builder.append_value(*value);
+                    } else {
+                        builder.append_null();
                     }
-                    Arc::new(builder.finish())
                 }
-                _ => {
-                    return Err(ArrowScalarError::Unimplemented(
-                        "TableList::to_array".to_string(),
-                        format!("{:?}", list.unit()),
-                    ))
-                }
-            },
+                Arc::new(builder.finish())
+            }
+            
             table_list::Values::Date32(list) => {
                 let mut builder = Date32Builder::new();
                 for (i, value) in list.values.iter().enumerate() {
@@ -2311,82 +2447,72 @@ impl TableList {
                 }
                 Arc::new(builder.finish())
             }
-            table_list::Values::Duration(list) => match list.unit() {
-                data_type_proto::TimeUnit::Second => {
-                    let mut builder = DurationSecondBuilder::new();
-                    for (i, value) in list.durations.iter().enumerate() {
-                        if list.set[i] {
-                            builder.append_value(*value);
-                        } else {
-                            builder.append_null();
-                        }
+            table_list::Values::DurationSecond(list) => {
+                let mut builder = DurationSecondBuilder::new();
+                for (i, value) in list.values.iter().enumerate() {
+                    if list.set[i] {
+                        builder.append_value(*value);
+                    } else {
+                        builder.append_null();
                     }
-                    Arc::new(builder.finish()) as ArrayRef
                 }
-                data_type_proto::TimeUnit::Millisecond => {
-                    let mut builder = DurationMillisecondBuilder::new();
-                    for (i, value) in list.durations.iter().enumerate() {
-                        if list.set[i] {
-                            builder.append_value(*value);
-                        } else {
-                            builder.append_null();
-                        }
+                Arc::new(builder.finish())
+            }
+            table_list::Values::DurationMillisecond(list) => {
+                let mut builder = DurationMillisecondBuilder::new();
+                for (i, value) in list.values.iter().enumerate() {
+                    if list.set[i] {
+                        builder.append_value(*value);
+                    } else {
+                        builder.append_null();
                     }
-                    Arc::new(builder.finish())
                 }
-                data_type_proto::TimeUnit::Microsecond => {
-                    let mut builder = DurationMicrosecondBuilder::new();
-                    for (i, value) in list.durations.iter().enumerate() {
-                        if list.set[i] {
-                            builder.append_value(*value);
-                        } else {
-                            builder.append_null();
-                        }
+                Arc::new(builder.finish())
+            }
+            table_list::Values::DurationMicrosecond(list) => {
+                let mut builder = DurationMicrosecondBuilder::new();
+                for (i, value) in list.values.iter().enumerate() {
+                    if list.set[i] {
+                        builder.append_value(*value);
+                    } else {
+                        builder.append_null();
                     }
-                    Arc::new(builder.finish())
                 }
-                data_type_proto::TimeUnit::Nanosecond => {
-                    let mut builder = DurationNanosecondBuilder::new();
-                    for (i, value) in list.durations.iter().enumerate() {
-                        if list.set[i] {
-                            builder.append_value(*value);
-                        } else {
-                            builder.append_null();
-                        }
+                Arc::new(builder.finish())
+            }
+            table_list::Values::DurationNanosecond(list) => {
+                let mut builder = DurationNanosecondBuilder::new();
+                for (i, value) in list.values.iter().enumerate() {
+                    if list.set[i] {
+                        builder.append_value(*value);
+                    } else {
+                        builder.append_null();
                     }
-                    Arc::new(builder.finish())
                 }
-            },
-            table_list::Values::Interval(list) => match list.unit() {
-                data_type_proto::IntervalUnit::YearMonth => {
-                    let mut builder = IntervalYearMonthBuilder::new();
-                    for (i, value) in list.intervals.iter().enumerate() {
-                        if list.set[i] {
-                            builder.append_value(*value as i32);
-                        } else {
-                            builder.append_null();
-                        }
+                Arc::new(builder.finish())
+            }
+            table_list::Values::IntervalYearMonth(list) => {
+                let mut builder = IntervalYearMonthBuilder::new();
+                for (i, value) in list.values.iter().enumerate() {
+                    if list.set[i] {
+                        builder.append_value(*value);
+                    } else {
+                        builder.append_null();
                     }
-                    Arc::new(builder.finish()) as ArrayRef
                 }
-                data_type_proto::IntervalUnit::DayTime => {
-                    let mut builder = IntervalDayTimeBuilder::new();
-                    for (i, value) in list.intervals.iter().enumerate() {
-                        if list.set[i] {
-                            builder.append_value(*value);
-                        } else {
-                            builder.append_null();
-                        }
+                Arc::new(builder.finish())
+            }
+            table_list::Values::IntervalDayTime(list) => {
+                let mut builder = IntervalDayTimeBuilder::new();
+                for (i, value) in list.values.iter().enumerate() {
+                    if list.set[i] {
+                        builder.append_value(*value);
+                    } else {
+                        builder.append_null();
                     }
-                    Arc::new(builder.finish())
                 }
-                data_type_proto::IntervalUnit::MonthDayNano => {
-                    return Err(ArrowScalarError::Unimplemented(
-                        "TableList::to_array".to_string(),
-                        format!("{:?}", list.unit()),
-                    ));
-                }
-            },
+                Arc::new(builder.finish())
+            }
             table_list::Values::Dictionary(_) => {
                 return Err(ArrowScalarError::Unimplemented(
                     "TableList::to_array".to_string(),
@@ -2512,90 +2638,40 @@ impl TableList {
                 "TableList::data_type".to_string(),
                 "Union".to_string(),
             )),
-            table_list::Values::Time32(table_list::TimeList {
+            table_list::Values::Time32Second(_) => {
+                Ok(DataType::Time32(TimeUnit::Second))
+            }
+            table_list::Values::Time32Millisecond(_) => Ok(DataType::Time32(TimeUnit::Millisecond)),
+            table_list::Values::Time64Microsecond(_) => Ok(DataType::Time64(TimeUnit::Microsecond)),
+            table_list::Values::Time64Nanosecond(_) => Ok(DataType::Time64(TimeUnit::Nanosecond)),
+            table_list::Values::TimestampSecond(table_list::TimeList {
                 times: _,
-                unit,
-                tz: _,
-                set: _,
-            }) => match data_type_proto::TimeUnit::from_i32(*unit) {
-                Some(data_type_proto::TimeUnit::Second) => Ok(DataType::Time32(TimeUnit::Second)),
-                Some(data_type_proto::TimeUnit::Microsecond) => {
-                    Ok(DataType::Time32(TimeUnit::Microsecond))
-                }
-                Some(data_type_proto::TimeUnit::Millisecond) => {
-                    Ok(DataType::Time32(TimeUnit::Millisecond))
-                }
-                Some(data_type_proto::TimeUnit::Nanosecond) => {
-                    Ok(DataType::Time32(TimeUnit::Nanosecond))
-                }
-                None => Err(ArrowScalarError::InvalidProtobuf),
-            },
-            table_list::Values::Time64(table_list::TimeList {
-                times: _,
-                unit,
-                tz: _,
-                set: _,
-            }) => match data_type_proto::TimeUnit::from_i32(*unit) {
-                Some(data_type_proto::TimeUnit::Second) => Ok(DataType::Time64(TimeUnit::Second)),
-                Some(data_type_proto::TimeUnit::Microsecond) => {
-                    Ok(DataType::Time64(TimeUnit::Microsecond))
-                }
-                Some(data_type_proto::TimeUnit::Millisecond) => {
-                    Ok(DataType::Time64(TimeUnit::Millisecond))
-                }
-                Some(data_type_proto::TimeUnit::Nanosecond) => {
-                    Ok(DataType::Time64(TimeUnit::Nanosecond))
-                }
-                None => Err(ArrowScalarError::InvalidProtobuf),
-            },
-            table_list::Values::Timestamp(table_list::TimeList {
-                times: _,
-                unit,
                 tz,
                 set: _,
-            }) => {
-                let unit = match data_type_proto::TimeUnit::from_i32(*unit) {
-                    Some(data_type_proto::TimeUnit::Second) => TimeUnit::Second,
-                    Some(data_type_proto::TimeUnit::Microsecond) => TimeUnit::Microsecond,
-                    Some(data_type_proto::TimeUnit::Millisecond) => TimeUnit::Millisecond,
-                    Some(data_type_proto::TimeUnit::Nanosecond) => TimeUnit::Nanosecond,
-                    None => return Err(ArrowScalarError::InvalidProtobuf),
-                };
-                Ok(DataType::Timestamp(unit, tz.to_owned()))
+            }) => Ok(DataType::Timestamp(TimeUnit::Second, tz.clone())),
+            table_list::Values::TimestampMillisecond(table_list::TimeList {
+                times: _,
+                tz,
+                set: _,
+            }) => Ok(DataType::Timestamp(TimeUnit::Millisecond, tz.clone())),
+            table_list::Values::TimestampMicrosecond(table_list::TimeList {
+                times: _,
+                tz,
+                set: _,
+            }) => Ok(DataType::Timestamp(TimeUnit::Microsecond, tz.clone())),
+            table_list::Values::TimestampNanosecond(table_list::TimeList {
+                times: _,
+                tz,
+                set: _,
+            }) => Ok(DataType::Timestamp(TimeUnit::Nanosecond, tz.clone())),
+            table_list::Values::IntervalYearMonth(_) => Ok(DataType::Interval(IntervalUnit::YearMonth)),
+            table_list::Values::IntervalDayTime(_) => Ok(DataType::Interval(IntervalUnit::DayTime)),
+            table_list::Values::DurationSecond(_) => {
+                Ok(DataType::Duration(TimeUnit::Second))
             }
-            table_list::Values::Interval(table_list::IntervalList {
-                intervals: _,
-                unit,
-                set: _,
-            }) => match data_type_proto::IntervalUnit::from_i32(*unit) {
-                Some(data_type_proto::IntervalUnit::DayTime) => {
-                    Ok(DataType::Interval(IntervalUnit::DayTime))
-                }
-                Some(data_type_proto::IntervalUnit::YearMonth) => {
-                    Ok(DataType::Interval(IntervalUnit::YearMonth))
-                }
-                Some(data_type_proto::IntervalUnit::MonthDayNano) => {
-                    Ok(DataType::Interval(IntervalUnit::MonthDayNano))
-                }
-                None => Err(ArrowScalarError::InvalidProtobuf),
-            },
-            table_list::Values::Duration(table_list::DurationList {
-                durations: _,
-                unit,
-                set: _,
-            }) => match data_type_proto::TimeUnit::from_i32(*unit) {
-                Some(data_type_proto::TimeUnit::Second) => Ok(DataType::Duration(TimeUnit::Second)),
-                Some(data_type_proto::TimeUnit::Microsecond) => {
-                    Ok(DataType::Duration(TimeUnit::Microsecond))
-                }
-                Some(data_type_proto::TimeUnit::Millisecond) => {
-                    Ok(DataType::Duration(TimeUnit::Millisecond))
-                }
-                Some(data_type_proto::TimeUnit::Nanosecond) => {
-                    Ok(DataType::Duration(TimeUnit::Nanosecond))
-                }
-                None => Err(ArrowScalarError::InvalidProtobuf),
-            },
+            table_list::Values::DurationMillisecond(_) => Ok(DataType::Duration(TimeUnit::Millisecond)),
+            table_list::Values::DurationMicrosecond(_) => Ok(DataType::Duration(TimeUnit::Microsecond)),
+            table_list::Values::DurationNanosecond(_) => Ok(DataType::Duration(TimeUnit::Nanosecond)),
         }
     }
 
@@ -2667,36 +2743,67 @@ impl TableList {
                 } = dict.as_ref();
                 values.as_ref().map(|a| a.len()).unwrap_or(0)
             }
-            table_list::Values::Time32(table_list::TimeList {
-                times,
-                unit: _,
-                tz: _,
-                set: _,
-            }) => times.len(),
-            table_list::Values::Time64(table_list::TimeList {
-                times,
-                unit: _,
-                tz: _,
-                set: _,
-            }) => times.len(),
-            table_list::Values::Timestamp(table_list::TimeList {
-                times,
-                unit: _,
-                tz: _,
-                set: _,
-            }) => times.len(),
             table_list::Values::Date32(table_list::Int32List { values, set: _ }) => values.len(),
             table_list::Values::Date64(table_list::Int64List { values, set: _ }) => values.len(),
-            table_list::Values::Interval(table_list::IntervalList {
-                intervals,
-                unit: _,
+            table_list::Values::Time32Second(table_list::Int32List {
+                values,
                 set: _,
-            }) => intervals.len(),
-            table_list::Values::Duration(table_list::DurationList {
-                durations,
-                unit: _,
+            }) => values.len(),
+            table_list::Values::Time32Millisecond(table_list::Int32List {
+                values,
                 set: _,
-            }) => durations.len(),
+            }) => values.len(),
+            table_list::Values::Time64Microsecond(table_list::Int64List {
+                values,
+                set: _,
+            }) => values.len(),
+            table_list::Values::Time64Nanosecond(table_list::Int64List {
+                values,
+                set: _,
+            }) => values.len(),
+            table_list::Values::TimestampSecond(table_list::TimeList {
+                times,
+                tz: _,
+                set: _,
+            }) => times.len(),
+            table_list::Values::TimestampMillisecond(table_list::TimeList {
+                times,
+                tz: _,
+                set: _,
+            }) => times.len(),
+            table_list::Values::TimestampMicrosecond(table_list::TimeList {
+                times,
+                tz: _,
+                set: _,
+            }) => times.len(),
+            table_list::Values::TimestampNanosecond(table_list::TimeList {
+                times,
+                tz: _,
+                set: _,
+            }) => times.len(),
+            table_list::Values::IntervalYearMonth(table_list::Int32List {
+                values,
+                set: _,
+            }) => values.len(),
+            table_list::Values::IntervalDayTime(table_list::Int64List { values, set: _ }) => {
+                values.len()
+            }
+            table_list::Values::DurationSecond(table_list::Int64List { values, set: _ }) => {
+                values.len()
+            }
+            table_list::Values::DurationMillisecond(table_list::Int64List {
+                values,
+                set: _,
+            }) => values.len(),
+            table_list::Values::DurationMicrosecond(table_list::Int64List {
+                values,
+                set: _,
+            }) => values.len(),
+            table_list::Values::DurationNanosecond(table_list::Int64List {
+                values,
+                set: _,
+            }) => values.len(),
+
         }
     }
 }
@@ -2714,149 +2821,258 @@ impl table_list::ListList {
         if list_type.data_type.is_none() {
             return Err(list);
         }
-        let list_data_type = list_type.data_type.as_ref().unwrap();
-        if list_data_type.data_type.is_none() {
-            return Err(list);
-        }
-        let list_data_type = list_data_type.data_type.as_ref().unwrap();
+        let list_data_type = list_type.to_arrow().expect("vald type");
 
-        match (list_data_type, list.values.unwrap()) {
-            (data_type_proto::DataType::Bool(_), table_list::Values::Boolean(value)) => {
+        match (list_data_type.data_type(), list.values.unwrap()) {
+            (DataType::Boolean, table_list::Values::Boolean(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Boolean(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (data_type_proto::DataType::Binary(_), table_list::Values::Binary(value)) => {
+            (DataType::Binary, table_list::Values::Binary(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Binary(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (data_type_proto::DataType::Int8(_), table_list::Values::Int8(value)) => {
+            (DataType::Int8, table_list::Values::Int8(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Int8(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (data_type_proto::DataType::Int16(_), table_list::Values::Int16(value)) => {
+            (DataType::Int16, table_list::Values::Int16(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Int16(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (data_type_proto::DataType::Int32(_), table_list::Values::Int32(value)) => {
+            (DataType::Int32, table_list::Values::Int32(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Int32(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (data_type_proto::DataType::Int64(_), table_list::Values::Int64(value)) => {
+            (DataType::Int64, table_list::Values::Int64(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Int64(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (data_type_proto::DataType::Uint8(_), table_list::Values::Uint8(value)) => {
+            (DataType::UInt8, table_list::Values::Uint8(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Uint8(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (data_type_proto::DataType::Uint16(_), table_list::Values::Uint16(value)) => {
+            (DataType::UInt16, table_list::Values::Uint16(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Uint16(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (data_type_proto::DataType::Uint32(_), table_list::Values::Uint32(value)) => {
+            (DataType::UInt32, table_list::Values::Uint32(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Uint32(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (data_type_proto::DataType::Uint64(_), table_list::Values::Uint64(value)) => {
+            (DataType::UInt64, table_list::Values::Uint64(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Uint64(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (data_type_proto::DataType::Float16(_), table_list::Values::Float16(value)) => {
+            (DataType::Float16, table_list::Values::Float16(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Float16(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (data_type_proto::DataType::Float32(_), table_list::Values::Float32(value)) => {
+            (DataType::Float32, table_list::Values::Float32(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Float32(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (data_type_proto::DataType::Float64(_), table_list::Values::Float64(value)) => {
+            (DataType::Float64, table_list::Values::Float64(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Float64(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (data_type_proto::DataType::Utf8(_), table_list::Values::Utf8(value)) => {
+            (DataType::Utf8, table_list::Values::Utf8(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Utf8(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (data_type_proto::DataType::LargeUtf8(_), table_list::Values::LargeUtf8(value)) => {
+            (DataType::LargeUtf8, table_list::Values::LargeUtf8(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::LargeUtf8(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (data_type_proto::DataType::Timestamp(_), table_list::Values::Timestamp(value)) => {
-                let rebuilt_list = TableList {
-                    values: Some(table_list::Values::Timestamp(value)),
-                };
-                self.values.push(rebuilt_list);
-                self.set.push(true);
-            }
-            (data_type_proto::DataType::Date32(_), table_list::Values::Date32(value)) => {
+            
+            (DataType::Date32, table_list::Values::Date32(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Date32(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (data_type_proto::DataType::Date64(_), table_list::Values::Date64(value)) => {
+            (DataType::Date64, table_list::Values::Date64(value)) => {
                 let rebuilt_list = TableList {
                     values: Some(table_list::Values::Date64(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (data_type_proto::DataType::Time32(_), table_list::Values::Time32(value)) => {
+            (DataType::Time32(TimeUnit::Second), table_list::Values::Time32Second(value)) => {
                 let rebuilt_list = TableList {
-                    values: Some(table_list::Values::Time32(value)),
+                    values: Some(table_list::Values::Time32Second(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);
             }
-            (data_type_proto::DataType::Time64(_), table_list::Values::Time64(value)) => {
+            (DataType::Time32(TimeUnit::Millisecond), table_list::Values::Time32Millisecond(value)) => {
                 let rebuilt_list = TableList {
-                    values: Some(table_list::Values::Time32(value)),
+                    values: Some(table_list::Values::Time32Second(value)),
+                };
+                self.values.push(rebuilt_list);
+                self.set.push(true);
+            }
+            (DataType::Time64(TimeUnit::Microsecond), table_list::Values::Time64Microsecond(value)) => {
+                let rebuilt_list = TableList {
+                    values: Some(table_list::Values::Time64Microsecond(value)),
+                };
+                self.values.push(rebuilt_list);
+                self.set.push(true);
+            }
+            (DataType::Time64(TimeUnit::Nanosecond), table_list::Values::Time64Nanosecond(value)) => {
+                let rebuilt_list = TableList {
+                    values: Some(table_list::Values::Time64Nanosecond(value)),
+                };
+                self.values.push(rebuilt_list);
+                self.set.push(true);
+            }
+            (DataType::Timestamp(TimeUnit::Second, _), table_list::Values::TimestampSecond(value)) => {
+                let rebuilt_list = TableList {
+                    values: Some(table_list::Values::TimestampSecond(value)),
+                };
+                self.values.push(rebuilt_list);
+                self.set.push(true);
+            }
+            (DataType::Timestamp(TimeUnit::Millisecond, _), table_list::Values::TimestampMillisecond(value)) => {
+                let rebuilt_list = TableList {
+                    values: Some(table_list::Values::TimestampMillisecond(value)),
+                };
+                self.values.push(rebuilt_list);
+                self.set.push(true);
+            }
+            (DataType::Timestamp(TimeUnit::Microsecond, _), table_list::Values::TimestampMicrosecond(value)) => {
+                let rebuilt_list = TableList {
+                    values: Some(table_list::Values::TimestampMicrosecond(value)),
+                };
+                self.values.push(rebuilt_list);
+                self.set.push(true);
+            }
+            (DataType::Timestamp(TimeUnit::Nanosecond, _), table_list::Values::TimestampNanosecond(value)) => {
+                let rebuilt_list = TableList {
+                    values: Some(table_list::Values::TimestampNanosecond(value)),
+                };
+                self.values.push(rebuilt_list);
+                self.set.push(true);
+            }
+            (DataType::Interval(IntervalUnit::YearMonth), table_list::Values::IntervalYearMonth(value)) => {
+                let rebuilt_list = TableList {
+                    values: Some(table_list::Values::IntervalYearMonth(value)),
+                };
+                self.values.push(rebuilt_list);
+                self.set.push(true);
+            }
+            (DataType::Interval(IntervalUnit::DayTime), table_list::Values::IntervalDayTime(value)) => {
+                let rebuilt_list = TableList {
+                    values: Some(table_list::Values::IntervalDayTime(value)),
+                };
+                self.values.push(rebuilt_list);
+                self.set.push(true);
+            }
+            (DataType::Duration(TimeUnit::Second), table_list::Values::DurationSecond(value)) => {
+                let rebuilt_list = TableList {
+                    values: Some(table_list::Values::DurationSecond(value)),
+                };
+                self.values.push(rebuilt_list);
+                self.set.push(true);
+            }
+            (DataType::Duration(TimeUnit::Millisecond), table_list::Values::DurationMillisecond(value)) => {
+                let rebuilt_list = TableList {
+                    values: Some(table_list::Values::DurationMillisecond(value)),
+                };
+                self.values.push(rebuilt_list);
+                self.set.push(true);
+            }
+            (DataType::Duration(TimeUnit::Microsecond), table_list::Values::DurationMicrosecond(value)) => {
+                let rebuilt_list = TableList {
+                    values: Some(table_list::Values::DurationMicrosecond(value)),
+                };
+                self.values.push(rebuilt_list);
+                self.set.push(true);
+            }
+            (DataType::Duration(TimeUnit::Nanosecond), table_list::Values::DurationNanosecond(value)) => {
+                let rebuilt_list = TableList {
+                    values: Some(table_list::Values::DurationNanosecond(value)),
+                };
+                self.values.push(rebuilt_list);
+                self.set.push(true);
+            }
+            (DataType::List(_), table_list::Values::List(value)) => {
+                let rebuilt_list = TableList {
+                    values: Some(table_list::Values::List(value)),
+                };
+                self.values.push(rebuilt_list);
+                self.set.push(true);
+            }
+            (DataType::LargeList(_), table_list::Values::LargeList(value)) => {
+                let rebuilt_list = TableList {
+                    values: Some(table_list::Values::LargeList(value)),
+                };
+                self.values.push(rebuilt_list);
+                self.set.push(true);
+            }
+            (DataType::FixedSizeList(_, _), table_list::Values::FixedSizeList(value)) => {
+                let rebuilt_list = TableList {
+                    values: Some(table_list::Values::FixedSizeList(value)),
+                };
+                self.values.push(rebuilt_list);
+                self.set.push(true);
+            }
+            (DataType::Struct(_), table_list::Values::Struct(value)) => {
+                let rebuilt_list = TableList {
+                    values: Some(table_list::Values::Struct(value)),
+                };
+                self.values.push(rebuilt_list);
+                self.set.push(true);
+            }
+            (DataType::Dictionary(_, _), table_list::Values::Dictionary(value)) => {
+                let rebuilt_list = TableList {
+                    values: Some(table_list::Values::Dictionary(value)),
                 };
                 self.values.push(rebuilt_list);
                 self.set.push(true);

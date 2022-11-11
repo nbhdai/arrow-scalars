@@ -3,26 +3,6 @@ use crate::{data_type_proto, FieldProto, SchemaProto};
 use crate::{ArrowScalarError, DataTypeProto};
 use arrow::datatypes::*;
 
-impl data_type_proto::TimeUnit {
-    pub fn to_arrow(&self) -> TimeUnit {
-        match self {
-            data_type_proto::TimeUnit::Second => TimeUnit::Second,
-            data_type_proto::TimeUnit::Microsecond => TimeUnit::Microsecond,
-            data_type_proto::TimeUnit::Millisecond => TimeUnit::Millisecond,
-            data_type_proto::TimeUnit::Nanosecond => TimeUnit::Nanosecond,
-        }
-    }
-
-    pub fn from_arrow(field: &TimeUnit) -> Self {
-        match field {
-            TimeUnit::Second => data_type_proto::TimeUnit::Second,
-            TimeUnit::Microsecond => data_type_proto::TimeUnit::Microsecond,
-            TimeUnit::Millisecond => data_type_proto::TimeUnit::Millisecond,
-            TimeUnit::Nanosecond => data_type_proto::TimeUnit::Nanosecond,
-        }
-    }
-}
-
 impl data_type_proto::IntervalUnit {
     pub fn to_arrow(&self) -> IntervalUnit {
         match self {
@@ -103,58 +83,48 @@ impl DataTypeProto {
                 data_type_proto::DataType::FixedSizeBinary(size) => {
                     DataType::FixedSizeBinary(*size)
                 }
-                data_type_proto::DataType::Time32(unit) => {
-                    match data_type_proto::TimeUnit::from_i32(*unit) {
-                        Some(data_type_proto::TimeUnit::Second) => {
-                            DataType::Time32(TimeUnit::Second)
-                        }
-                        Some(data_type_proto::TimeUnit::Millisecond) => {
-                            DataType::Time32(TimeUnit::Millisecond)
-                        }
-                        _ => return Err(ArrowScalarError::InvalidProtobuf),
-                    }
+                data_type_proto::DataType::Time32Second(_) => DataType::Time32(TimeUnit::Second),
+                data_type_proto::DataType::Time32Millisecond(_) => {
+                    DataType::Time32(TimeUnit::Millisecond)
                 }
-                data_type_proto::DataType::Time64(unit) => {
-                    match data_type_proto::TimeUnit::from_i32(*unit) {
-                        Some(data_type_proto::TimeUnit::Microsecond) => {
-                            DataType::Time64(TimeUnit::Microsecond)
-                        }
-                        Some(data_type_proto::TimeUnit::Nanosecond) => {
-                            DataType::Time64(TimeUnit::Nanosecond)
-                        }
-                        _ => return Err(ArrowScalarError::InvalidProtobuf),
-                    }
+                data_type_proto::DataType::Time64Microsecond(_) => {
+                    DataType::Time64(TimeUnit::Microsecond)
                 }
-                data_type_proto::DataType::Timestamp(data_type_proto::Timestamp { unit, tz }) => {
-                    let unit = match data_type_proto::TimeUnit::from_i32(*unit) {
-                        Some(data_type_proto::TimeUnit::Second) => TimeUnit::Second,
-                        Some(data_type_proto::TimeUnit::Millisecond) => TimeUnit::Millisecond,
-                        Some(data_type_proto::TimeUnit::Microsecond) => TimeUnit::Microsecond,
-                        Some(data_type_proto::TimeUnit::Nanosecond) => TimeUnit::Nanosecond,
-                        _ => return Err(ArrowScalarError::InvalidProtobuf),
-                    };
-                    DataType::Timestamp(unit, tz.to_owned())
+                data_type_proto::DataType::Time64Nanosecond(_) => {
+                    DataType::Time64(TimeUnit::Nanosecond)
                 }
-                data_type_proto::DataType::Duration(unit) => {
-                    let unit = match data_type_proto::TimeUnit::from_i32(*unit) {
-                        Some(data_type_proto::TimeUnit::Second) => TimeUnit::Second,
-                        Some(data_type_proto::TimeUnit::Millisecond) => TimeUnit::Millisecond,
-                        Some(data_type_proto::TimeUnit::Microsecond) => TimeUnit::Microsecond,
-                        Some(data_type_proto::TimeUnit::Nanosecond) => TimeUnit::Nanosecond,
-                        _ => return Err(ArrowScalarError::InvalidProtobuf),
-                    };
-                    DataType::Duration(unit)
+                data_type_proto::DataType::TimestampSecond(tz) => {
+                    DataType::Timestamp(TimeUnit::Second, tz.tz.clone())
                 }
-                data_type_proto::DataType::Interval(unit) => {
-                    let unit = match data_type_proto::IntervalUnit::from_i32(*unit) {
-                        Some(data_type_proto::IntervalUnit::DayTime) => IntervalUnit::DayTime,
-                        Some(data_type_proto::IntervalUnit::YearMonth) => IntervalUnit::YearMonth,
-                        Some(data_type_proto::IntervalUnit::MonthDayNano) => {
-                            IntervalUnit::MonthDayNano
-                        }
-                        _ => return Err(ArrowScalarError::InvalidProtobuf),
-                    };
-                    DataType::Interval(unit)
+                data_type_proto::DataType::TimestampMillisecond(tz) => {
+                    DataType::Timestamp(TimeUnit::Millisecond, tz.tz.clone())
+                }
+                data_type_proto::DataType::TimestampMicrosecond(tz) => {
+                    DataType::Timestamp(TimeUnit::Microsecond, tz.tz.clone())
+                }
+                data_type_proto::DataType::TimestampNanosecond(tz) => {
+                    DataType::Timestamp(TimeUnit::Nanosecond, tz.tz.clone())
+                }
+                data_type_proto::DataType::IntervalYearMonth(_) => {
+                    DataType::Interval(IntervalUnit::YearMonth)
+                }
+                data_type_proto::DataType::IntervalDayTime(_) => {
+                    DataType::Interval(IntervalUnit::DayTime)
+                }
+                data_type_proto::DataType::IntervalMonthDayNano(_) => {
+                    DataType::Interval(IntervalUnit::MonthDayNano)
+                }
+                data_type_proto::DataType::DurationSecond(_) => {
+                    DataType::Duration(TimeUnit::Second)
+                }
+                data_type_proto::DataType::DurationMillisecond(_) => {
+                    DataType::Duration(TimeUnit::Millisecond)
+                }
+                data_type_proto::DataType::DurationMicrosecond(_) => {
+                    DataType::Duration(TimeUnit::Microsecond)
+                }
+                data_type_proto::DataType::DurationNanosecond(_) => {
+                    DataType::Duration(TimeUnit::Nanosecond)
                 }
                 data_type_proto::DataType::List(field) => {
                     DataType::List(Box::new(field.to_arrow()?))
@@ -259,34 +229,30 @@ impl DataTypeProto {
             DataType::Binary => Some(data_type_proto::DataType::Binary(EmptyMessage {})),
             DataType::LargeBinary => Some(data_type_proto::DataType::LargeBinary(EmptyMessage {})),
             DataType::Time32(data_type) => match data_type {
-                TimeUnit::Second => Some(data_type_proto::DataType::Time32(
-                    data_type_proto::TimeUnit::Second.into(),
-                )),
-                TimeUnit::Millisecond => Some(data_type_proto::DataType::Time32(
-                    data_type_proto::TimeUnit::Millisecond.into(),
-                )),
+                TimeUnit::Second => Some(data_type_proto::DataType::Time32Second(EmptyMessage {})),
+                TimeUnit::Millisecond => {
+                    Some(data_type_proto::DataType::Time32Millisecond(EmptyMessage {}))
+                }
                 _ => None,
             },
             DataType::Time64(data_type) => match data_type {
-                TimeUnit::Microsecond => Some(data_type_proto::DataType::Time64(
-                    data_type_proto::TimeUnit::Microsecond.into(),
-                )),
-                TimeUnit::Nanosecond => Some(data_type_proto::DataType::Time64(
-                    data_type_proto::TimeUnit::Nanosecond.into(),
-                )),
+                TimeUnit::Microsecond => {
+                    Some(data_type_proto::DataType::Time64Microsecond(EmptyMessage {}))
+                }
+                TimeUnit::Nanosecond => {
+                    Some(data_type_proto::DataType::Time64Nanosecond(EmptyMessage {}))
+                }
                 _ => None,
             },
             DataType::Timestamp(data_type, tz) => {
+                let tz = data_type_proto::Timestamp { tz: tz.to_owned() };
                 let unit = match data_type {
-                    TimeUnit::Second => data_type_proto::TimeUnit::Second.into(),
-                    TimeUnit::Millisecond => data_type_proto::TimeUnit::Millisecond.into(),
-                    TimeUnit::Microsecond => data_type_proto::TimeUnit::Microsecond.into(),
-                    TimeUnit::Nanosecond => data_type_proto::TimeUnit::Nanosecond.into(),
+                    TimeUnit::Second => data_type_proto::DataType::TimestampSecond(tz),
+                    TimeUnit::Millisecond => data_type_proto::DataType::TimestampMillisecond(tz),
+                    TimeUnit::Microsecond => data_type_proto::DataType::TimestampMicrosecond(tz),
+                    TimeUnit::Nanosecond => data_type_proto::DataType::TimestampNanosecond(tz),
                 };
-                let tz = tz.to_owned();
-                Some(data_type_proto::DataType::Timestamp(
-                    data_type_proto::Timestamp { unit, tz },
-                ))
+                Some(unit)
             }
             DataType::Struct(fields) => {
                 let fields = fields
@@ -336,15 +302,9 @@ impl DataTypeProto {
                 Some(data_type_proto::DataType::FixedSizeBinary(*size))
             }
             DataType::Interval(interval_type) => match interval_type {
-                IntervalUnit::YearMonth => Some(data_type_proto::DataType::Interval(
-                    data_type_proto::IntervalUnit::YearMonth.into(),
-                )),
-                IntervalUnit::DayTime => Some(data_type_proto::DataType::Interval(
-                    data_type_proto::IntervalUnit::DayTime.into(),
-                )),
-                IntervalUnit::MonthDayNano => Some(data_type_proto::DataType::Interval(
-                    data_type_proto::IntervalUnit::MonthDayNano.into(),
-                )),
+                IntervalUnit::YearMonth => Some(data_type_proto::DataType::IntervalYearMonth(EmptyMessage {})),
+                IntervalUnit::DayTime => Some(data_type_proto::DataType::IntervalDayTime(EmptyMessage {})),
+                IntervalUnit::MonthDayNano => Some(data_type_proto::DataType::IntervalMonthDayNano(EmptyMessage {})),
             },
             DataType::Union(fields, type_ids, union_mode) => {
                 let fields = fields.iter().map(FieldProto::from_arrow).collect();
@@ -360,18 +320,10 @@ impl DataTypeProto {
                 }))
             }
             DataType::Duration(data_type) => match data_type {
-                TimeUnit::Second => Some(data_type_proto::DataType::Duration(
-                    data_type_proto::TimeUnit::Second.into(),
-                )),
-                TimeUnit::Millisecond => Some(data_type_proto::DataType::Duration(
-                    data_type_proto::TimeUnit::Millisecond.into(),
-                )),
-                TimeUnit::Microsecond => Some(data_type_proto::DataType::Duration(
-                    data_type_proto::TimeUnit::Microsecond.into(),
-                )),
-                TimeUnit::Nanosecond => Some(data_type_proto::DataType::Duration(
-                    data_type_proto::TimeUnit::Nanosecond.into(),
-                )),
+                TimeUnit::Second => Some(data_type_proto::DataType::DurationSecond(EmptyMessage {})),
+                TimeUnit::Millisecond => Some(data_type_proto::DataType::DurationMillisecond(EmptyMessage {})),
+                TimeUnit::Microsecond => Some(data_type_proto::DataType::DurationMicrosecond(EmptyMessage {})),
+                TimeUnit::Nanosecond => Some(data_type_proto::DataType::DurationNanosecond(EmptyMessage {})),
             },
             DataType::Decimal128(precision, scale) => Some(data_type_proto::DataType::Decimal128(
                 data_type_proto::Decimal {

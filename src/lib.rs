@@ -1,8 +1,6 @@
 mod scalar;
 use arrow::error::ArrowError;
 pub use scalar::*;
-mod time;
-pub use time::*;
 mod list;
 pub use list::*;
 mod arrow_scalars;
@@ -19,6 +17,8 @@ pub enum ArrowScalarError {
     Unimplemented(String, String),
     #[error("Invalid Protobuf")]
     InvalidProtobuf,
+    #[error("Invalid Scalar")]
+    InvalidScalar(TableScalar),
     #[error("Out of Bounds Access Error")]
     AccessError,
     #[error("Arrow Error: `{0}`")]

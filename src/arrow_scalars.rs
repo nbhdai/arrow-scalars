@@ -14,7 +14,7 @@ pub struct SchemaProto {
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct DataTypeProto {
-    #[prost(oneof="data_type_proto::DataType", tags="1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34")]
+    #[prost(oneof="data_type_proto::DataType", tags="1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44")]
     pub data_type: ::core::option::Option<data_type_proto::DataType>,
 }
 /// Nested message and enum types in `DataTypeProto`.
@@ -24,9 +24,7 @@ pub mod data_type_proto {
     }
     #[derive(Clone, PartialEq, ::prost::Message)]
     pub struct Timestamp {
-        #[prost(enumeration="TimeUnit", tag="1")]
-        pub unit: i32,
-        #[prost(string, optional, tag="2")]
+        #[prost(string, optional, tag="1")]
         pub tz: ::core::option::Option<::prost::alloc::string::String>,
     }
     #[derive(Clone, PartialEq, ::prost::Message)]
@@ -82,14 +80,6 @@ pub mod data_type_proto {
     }
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
-    pub enum TimeUnit {
-        Second = 0,
-        Millisecond = 1,
-        Microsecond = 2,
-        Nanosecond = 3,
-    }
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
-    #[repr(i32)]
     pub enum IntervalUnit {
         YearMonth = 0,
         DayTime = 1,
@@ -127,87 +117,73 @@ pub mod data_type_proto {
         Date32(EmptyMessage),
         #[prost(message, tag="15")]
         Date64(EmptyMessage),
-        #[prost(enumeration="TimeUnit", tag="16")]
-        Time32(i32),
-        #[prost(enumeration="TimeUnit", tag="17")]
-        Time64(i32),
+        #[prost(message, tag="16")]
+        Time32Second(EmptyMessage),
+        #[prost(message, tag="17")]
+        Time32Millisecond(EmptyMessage),
         #[prost(message, tag="18")]
-        Timestamp(Timestamp),
-        #[prost(enumeration="IntervalUnit", tag="19")]
-        Interval(i32),
-        #[prost(enumeration="TimeUnit", tag="20")]
-        Duration(i32),
+        Time64Microsecond(EmptyMessage),
+        #[prost(message, tag="19")]
+        Time64Nanosecond(EmptyMessage),
+        #[prost(message, tag="20")]
+        TimestampSecond(Timestamp),
         #[prost(message, tag="21")]
-        Binary(EmptyMessage),
+        TimestampMillisecond(Timestamp),
         #[prost(message, tag="22")]
-        LargeBinary(EmptyMessage),
-        #[prost(int32, tag="23")]
-        FixedSizeBinary(i32),
+        TimestampMicrosecond(Timestamp),
+        #[prost(message, tag="23")]
+        TimestampNanosecond(Timestamp),
         #[prost(message, tag="24")]
-        Utf8(EmptyMessage),
+        DurationSecond(EmptyMessage),
         #[prost(message, tag="25")]
-        LargeUtf8(EmptyMessage),
+        DurationMillisecond(EmptyMessage),
         #[prost(message, tag="26")]
-        List(::prost::alloc::boxed::Box<super::FieldProto>),
+        DurationMicrosecond(EmptyMessage),
         #[prost(message, tag="27")]
-        LargeList(::prost::alloc::boxed::Box<super::FieldProto>),
+        DurationNanosecond(EmptyMessage),
         #[prost(message, tag="28")]
-        FixedSizeList(::prost::alloc::boxed::Box<FixedSizeList>),
+        IntervalYearMonth(EmptyMessage),
         #[prost(message, tag="29")]
-        Struct(Struct),
+        IntervalDayTime(EmptyMessage),
         #[prost(message, tag="30")]
-        Dictionary(::prost::alloc::boxed::Box<Dictionary>),
+        IntervalMonthDayNano(EmptyMessage),
         #[prost(message, tag="31")]
-        Union(Union),
+        Binary(EmptyMessage),
         #[prost(message, tag="32")]
-        Decimal128(Decimal),
-        #[prost(message, tag="33")]
-        Decimal256(Decimal),
+        LargeBinary(EmptyMessage),
+        #[prost(int32, tag="33")]
+        FixedSizeBinary(i32),
         #[prost(message, tag="34")]
+        Utf8(EmptyMessage),
+        #[prost(message, tag="35")]
+        LargeUtf8(EmptyMessage),
+        #[prost(message, tag="36")]
+        List(::prost::alloc::boxed::Box<super::FieldProto>),
+        #[prost(message, tag="37")]
+        LargeList(::prost::alloc::boxed::Box<super::FieldProto>),
+        #[prost(message, tag="38")]
+        FixedSizeList(::prost::alloc::boxed::Box<FixedSizeList>),
+        #[prost(message, tag="39")]
+        Struct(Struct),
+        #[prost(message, tag="40")]
+        Dictionary(::prost::alloc::boxed::Box<Dictionary>),
+        #[prost(message, tag="41")]
+        Union(Union),
+        #[prost(message, tag="42")]
+        Decimal128(Decimal),
+        #[prost(message, tag="43")]
+        Decimal256(Decimal),
+        #[prost(message, tag="44")]
         Map(::prost::alloc::boxed::Box<Map>),
     }
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct TableScalar {
-    #[prost(oneof="table_scalar::Value", tags="1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32")]
+    #[prost(oneof="table_scalar::Value", tags="1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42")]
     pub value: ::core::option::Option<table_scalar::Value>,
 }
 /// Nested message and enum types in `TableScalar`.
 pub mod table_scalar {
-    #[derive(Clone, PartialEq, ::prost::Message)]
-    pub struct Time {
-        #[prost(enumeration="super::data_type_proto::TimeUnit", tag="1")]
-        pub unit: i32,
-        #[prost(int64, tag="2")]
-        pub time: i64,
-        #[prost(string, optional, tag="3")]
-        pub tz: ::core::option::Option<::prost::alloc::string::String>,
-    }
-    #[derive(Clone, PartialEq, ::prost::Message)]
-    pub struct Duration {
-        #[prost(enumeration="super::data_type_proto::TimeUnit", tag="1")]
-        pub unit: i32,
-        #[prost(int64, tag="2")]
-        pub duration: i64,
-    }
-    #[derive(Clone, PartialEq, ::prost::Message)]
-    pub struct Interval {
-        #[prost(oneof="interval::Interval", tags="1, 2, 3")]
-        pub interval: ::core::option::Option<interval::Interval>,
-    }
-    /// Nested message and enum types in `Interval`.
-    pub mod interval {
-        #[derive(Clone, PartialEq, ::prost::Oneof)]
-        pub enum Interval {
-            #[prost(int32, tag="1")]
-            YearMonth(i32),
-            #[prost(int64, tag="2")]
-            DayTime(i64),
-            /// le encoded u128
-            #[prost(bytes, tag="3")]
-            MonthDayNano(::prost::alloc::vec::Vec<u8>),
-        }
-    }
     #[derive(Clone, PartialEq, ::prost::Message)]
     pub struct Struct {
         #[prost(map="string, message", tag="1")]
@@ -255,50 +231,68 @@ pub mod table_scalar {
         Float32(f32),
         #[prost(double, tag="13")]
         Float64(f64),
-        #[prost(message, tag="14")]
-        Timestamp(Time),
         #[prost(int32, tag="15")]
         Date32(i32),
         #[prost(int64, tag="16")]
         Date64(i64),
-        #[prost(message, tag="17")]
-        Time32(Time),
-        #[prost(message, tag="18")]
-        Time64(Time),
-        #[prost(message, tag="19")]
-        Interval(Interval),
-        #[prost(message, tag="20")]
-        Duration(Duration),
-        #[prost(bytes, tag="21")]
+        #[prost(int32, tag="17")]
+        Time32Second(i32),
+        #[prost(int32, tag="18")]
+        Time32Millisecond(i32),
+        #[prost(int64, tag="19")]
+        Time64Microsecond(i64),
+        #[prost(int64, tag="20")]
+        Time64Nanosecond(i64),
+        #[prost(int64, tag="21")]
+        TimestampSecond(i64),
+        #[prost(int64, tag="22")]
+        TimestampMillisecond(i64),
+        #[prost(int64, tag="23")]
+        TimestampMicrosecond(i64),
+        #[prost(int64, tag="24")]
+        TimestampNanosecond(i64),
+        #[prost(int64, tag="25")]
+        DurationSecond(i64),
+        #[prost(int64, tag="26")]
+        DurationMillisecond(i64),
+        #[prost(int64, tag="27")]
+        DurationMicrosecond(i64),
+        #[prost(int64, tag="28")]
+        DurationNanosecond(i64),
+        #[prost(int32, tag="29")]
+        IntervalYearMonth(i32),
+        #[prost(int64, tag="30")]
+        IntervalDayTime(i64),
+        #[prost(bytes, tag="31")]
         Binary(::prost::alloc::vec::Vec<u8>),
-        #[prost(bytes, tag="22")]
+        #[prost(bytes, tag="32")]
         FixedSizeBinary(::prost::alloc::vec::Vec<u8>),
-        #[prost(bytes, tag="23")]
+        #[prost(bytes, tag="33")]
         LargeBinary(::prost::alloc::vec::Vec<u8>),
-        #[prost(string, tag="24")]
+        #[prost(string, tag="34")]
         Utf8(::prost::alloc::string::String),
-        #[prost(string, tag="25")]
+        #[prost(string, tag="35")]
         LargeUtf8(::prost::alloc::string::String),
-        #[prost(message, tag="26")]
+        #[prost(message, tag="36")]
         Struct(Struct),
-        #[prost(message, tag="27")]
+        #[prost(message, tag="37")]
         Union(::prost::alloc::boxed::Box<super::TableScalar>),
         /// We don't care about the exact index in dictionaries, so we don't encode it.
-        #[prost(message, tag="28")]
+        #[prost(message, tag="38")]
         Dictionary(::prost::alloc::boxed::Box<super::TableScalar>),
-        #[prost(message, tag="29")]
+        #[prost(message, tag="39")]
         List(super::TableList),
-        #[prost(message, tag="30")]
+        #[prost(message, tag="40")]
         FixedSizeList(super::TableList),
-        #[prost(message, tag="31")]
+        #[prost(message, tag="41")]
         LargeList(super::TableList),
-        #[prost(message, tag="32")]
+        #[prost(message, tag="42")]
         Map(Map),
     }
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct TableList {
-    #[prost(oneof="table_list::Values", tags="1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31")]
+    #[prost(oneof="table_list::Values", tags="1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40")]
     pub values: ::core::option::Option<table_list::Values>,
 }
 /// Nested message and enum types in `TableList`.
@@ -389,8 +383,6 @@ pub mod table_list {
     }
     #[derive(Clone, PartialEq, ::prost::Message)]
     pub struct TimeList {
-        #[prost(enumeration="super::data_type_proto::TimeUnit", tag="1")]
-        pub unit: i32,
         #[prost(int64, repeated, tag="2")]
         pub times: ::prost::alloc::vec::Vec<i64>,
         #[prost(string, optional, tag="3")]
@@ -400,8 +392,6 @@ pub mod table_list {
     }
     #[derive(Clone, PartialEq, ::prost::Message)]
     pub struct DurationList {
-        #[prost(enumeration="super::data_type_proto::TimeUnit", tag="1")]
-        pub unit: i32,
         #[prost(int64, repeated, tag="2")]
         pub durations: ::prost::alloc::vec::Vec<i64>,
         #[prost(bool, repeated, tag="3")]
@@ -493,40 +483,58 @@ pub mod table_list {
         #[prost(message, tag="13")]
         Float64(Float64List),
         #[prost(message, tag="14")]
-        Timestamp(TimeList),
-        #[prost(message, tag="15")]
         Date32(Int32List),
-        #[prost(message, tag="16")]
+        #[prost(message, tag="15")]
         Date64(Int64List),
+        #[prost(message, tag="16")]
+        Time32Second(Int32List),
         #[prost(message, tag="17")]
-        Time32(TimeList),
+        Time32Millisecond(Int32List),
         #[prost(message, tag="18")]
-        Time64(TimeList),
+        Time64Microsecond(Int64List),
         #[prost(message, tag="19")]
-        Duration(DurationList),
+        Time64Nanosecond(Int64List),
         #[prost(message, tag="20")]
-        Interval(IntervalList),
+        TimestampSecond(TimeList),
         #[prost(message, tag="21")]
-        Binary(BinaryList),
+        TimestampMillisecond(TimeList),
         #[prost(message, tag="22")]
-        LargeBinary(BinaryList),
+        TimestampMicrosecond(TimeList),
         #[prost(message, tag="23")]
-        FixedSizeBinary(BinaryList),
+        TimestampNanosecond(TimeList),
         #[prost(message, tag="24")]
-        Utf8(Utf8List),
+        DurationSecond(Int64List),
         #[prost(message, tag="25")]
-        LargeUtf8(Utf8List),
+        DurationMillisecond(Int64List),
         #[prost(message, tag="26")]
-        List(ListList),
+        DurationMicrosecond(Int64List),
         #[prost(message, tag="27")]
-        LargeList(ListList),
+        DurationNanosecond(Int64List),
         #[prost(message, tag="28")]
-        FixedSizeList(ListList),
+        IntervalYearMonth(Int32List),
         #[prost(message, tag="29")]
-        Union(UnionList),
+        IntervalDayTime(Int64List),
         #[prost(message, tag="30")]
-        Dictionary(::prost::alloc::boxed::Box<DictionaryList>),
+        Binary(BinaryList),
         #[prost(message, tag="31")]
+        LargeBinary(BinaryList),
+        #[prost(message, tag="32")]
+        FixedSizeBinary(BinaryList),
+        #[prost(message, tag="33")]
+        Utf8(Utf8List),
+        #[prost(message, tag="34")]
+        LargeUtf8(Utf8List),
+        #[prost(message, tag="35")]
+        List(ListList),
+        #[prost(message, tag="36")]
+        LargeList(ListList),
+        #[prost(message, tag="37")]
+        FixedSizeList(ListList),
+        #[prost(message, tag="38")]
+        Union(UnionList),
+        #[prost(message, tag="39")]
+        Dictionary(::prost::alloc::boxed::Box<DictionaryList>),
+        #[prost(message, tag="40")]
         Struct(StructList),
     }
 }

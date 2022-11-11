@@ -1,4 +1,4 @@
-// Version 0.2.0
+// Version 0.3.0
 
 syntax = "proto3";
 package arrow_scalars;
@@ -15,15 +15,8 @@ message SchemaProto {
 
 message DataTypeProto {
     message EmptyMessage {}
-    enum TimeUnit {
-        second = 0;
-        millisecond = 1;
-        microsecond = 2;
-        nanosecond = 3;
-    }
     message Timestamp {
-        TimeUnit unit = 1;
-        optional string tz = 2;
+        optional string tz = 1;
     }
     enum IntervalUnit {
         year_month = 0;
@@ -76,51 +69,44 @@ message DataTypeProto {
 
         EmptyMessage date32 = 14;
         EmptyMessage date64 = 15;
-        TimeUnit time32 = 16;
-        TimeUnit time64 = 17;
-        Timestamp timestamp = 18;
-        IntervalUnit interval = 19;
-        TimeUnit duration = 20;
+        EmptyMessage time32_second = 16;
+        EmptyMessage time32_millisecond = 17;
+        EmptyMessage time64_microsecond = 18;
+        EmptyMessage time64_nanosecond = 19;
+        Timestamp timestamp_second = 20;
+        Timestamp timestamp_millisecond = 21;
+        Timestamp timestamp_microsecond = 22;
+        Timestamp timestamp_nanosecond = 23;
+        EmptyMessage duration_second = 24;
+        EmptyMessage duration_millisecond = 25;
+        EmptyMessage duration_microsecond = 26;
+        EmptyMessage duration_nanosecond = 27;
+        EmptyMessage interval_year_month = 28;
+        EmptyMessage interval_day_time = 29;
+        EmptyMessage interval_month_day_nano = 30;
 
-        EmptyMessage binary = 21;
-        EmptyMessage large_binary = 22;
-        int32 fixed_size_binary = 23;
+        EmptyMessage binary = 31;
+        EmptyMessage large_binary = 32;
+        int32 fixed_size_binary = 33;
 
-        EmptyMessage utf8 = 24;
-        EmptyMessage large_utf8 = 25;
+        EmptyMessage utf8 = 34;
+        EmptyMessage large_utf8 = 35;
 
-        FieldProto list = 26;
-        FieldProto large_list = 27;
-        FixedSizeList fixed_size_list = 28;
+        FieldProto list = 36;
+        FieldProto large_list = 37;
+        FixedSizeList fixed_size_list = 38;
 
-        Struct struct = 29;
-        Dictionary dictionary = 30;
-        Union union = 31;
+        Struct struct = 39;
+        Dictionary dictionary = 40;
+        Union union = 41;
 
-        Decimal decimal128 = 32;
-        Decimal decimal256 = 33;
-        Map map = 34;
+        Decimal decimal128 = 42;
+        Decimal decimal256 = 43;
+        Map map = 44;
     }
 }
 
 message TableScalar {
-    message Time {
-        DataTypeProto.TimeUnit unit = 1;
-        int64 time = 2;
-        optional string tz = 3;
-    }
-    message Duration {
-        DataTypeProto.TimeUnit unit = 1;
-        int64 duration = 2;
-    }
-    message Interval {
-        oneof interval {
-            int32 year_month = 1;
-            int64 day_time = 2;
-            // le encoded u128
-            bytes month_day_nano = 3;
-        }
-    }
     message Struct {
         map<string,TableScalar> elements = 1;
     }
@@ -147,26 +133,35 @@ message TableScalar {
         float float16 = 11;
         float float32 = 12;
         double float64 = 13;
-        Time timestamp = 14;
         int32 date32 = 15;
         int64 date64 = 16;
-        Time time32 = 17;
-        Time time64 = 18;
-        Interval interval = 19;
-        Duration duration = 20;
-        bytes binary = 21;
-        bytes fixed_size_binary = 22;
-        bytes large_binary = 23;
-        string utf8 = 24;
-        string large_utf8 = 25;
-        Struct struct = 26;
-        TableScalar union = 27;
+        int32 time32_second = 17;
+        int32 time32_millisecond = 18;
+        int64 time64_microsecond = 19;
+        int64 time64_nanosecond = 20;
+        int64 timestamp_second = 21;
+        int64 timestamp_millisecond = 22;
+        int64 timestamp_microsecond = 23;
+        int64 timestamp_nanosecond = 24;
+        int64 duration_second = 25;
+        int64 duration_millisecond = 26;
+        int64 duration_microsecond = 27;
+        int64 duration_nanosecond = 28;
+        int32 interval_year_month = 29;
+        int64 interval_day_time = 30;
+        bytes binary = 31;
+        bytes fixed_size_binary = 32;
+        bytes large_binary = 33;
+        string utf8 = 34;
+        string large_utf8 = 35;
+        Struct struct = 36;
+        TableScalar union = 37;
         // We don't care about the exact index in dictionaries, so we don't encode it.
-        TableScalar dictionary = 28;
-        TableList list = 29;
-        TableList fixed_size_list = 30;
-        TableList large_list = 31;
-        Map map = 32;
+        TableScalar dictionary = 38;
+        TableList list = 39;
+        TableList fixed_size_list = 40;
+        TableList large_list = 41;
+        Map map = 42;
     }
 }
 
@@ -220,13 +215,11 @@ message TableList {
         repeated bool set = 2;
     }
     message TimeList {
-        DataTypeProto.TimeUnit unit = 1;
         repeated int64 times = 2;
         optional string tz = 3;
         repeated bool set = 4;
     }
     message DurationList {
-        DataTypeProto.TimeUnit unit = 1;
         repeated int64 durations = 2;
         repeated bool set = 3;
     }
@@ -277,24 +270,37 @@ message TableList {
         Float16List float16 = 11;
         Float32List float32 = 12;
         Float64List float64 = 13;
-        TimeList timestamp = 14;
-        Int32List date32 = 15;
-        Int64List date64 = 16;
-        TimeList time32 = 17;
-        TimeList time64 = 18;
-        DurationList duration = 19;
-        IntervalList interval = 20;
-        BinaryList binary = 21;
-        BinaryList large_binary = 22;
-        BinaryList fixed_size_binary = 23;
-        Utf8List utf8 = 24;
-        Utf8List large_utf8 = 25;
-        ListList list = 26;
-        ListList large_list = 27;
-        ListList fixed_size_list = 28;
-        UnionList union = 29;
-        DictionaryList dictionary = 30;
-        StructList struct = 31;
+        Int32List date32 = 14;
+        Int64List date64 = 15;
+        Int32List time32_second = 16;
+        Int32List time32_millisecond = 17;
+        Int64List time64_microsecond = 18;
+        Int64List time64_nanosecond = 19;
+
+        TimeList timestamp_second = 20;
+        TimeList timestamp_millisecond = 21;
+        TimeList timestamp_microsecond = 22;
+        TimeList timestamp_nanosecond = 23;
+
+        Int64List duration_second = 24;
+        Int64List duration_millisecond = 25;
+        Int64List duration_microsecond = 26;
+        Int64List duration_nanosecond = 27;
+
+        Int32List interval_year_month = 28;
+        Int64List interval_day_time = 29;
+
+        BinaryList binary = 30;
+        BinaryList large_binary = 31;
+        BinaryList fixed_size_binary = 32;
+        Utf8List utf8 = 33;
+        Utf8List large_utf8 = 34;
+        ListList list = 35;
+        ListList large_list = 36;
+        ListList fixed_size_list = 37;
+        UnionList union = 38;
+        DictionaryList dictionary = 39;
+        StructList struct = 40;
     }
 }
 

@@ -1,7 +1,7 @@
 use std::{collections::HashMap, sync::Arc};
 
 use crate::{
-    table_list, ArrowScalarError, ListValuable, ScalarValuable, Table, TableList, TableRow,
+    ArrowScalarError, ListValuable, ScalarValuable, Table, TableList, TableRow,
     TableScalar,
 };
 use arrow::{
@@ -94,7 +94,7 @@ impl Table {
         RecordBatch::try_new(schema, columns).map_err(|err| ArrowScalarError::ArrowError(err))
     }
 
-    pub fn from_arrow(&self, records: &RecordBatch) -> Result<Self, ArrowScalarError> {
+    pub fn from_arrow(records: &RecordBatch) -> Result<Self, ArrowScalarError> {
         let schema = records.schema();
         let values = schema
             .fields()
@@ -105,10 +105,10 @@ impl Table {
         Ok(Self { values })
     }
 
-    pub fn column(&self, key: &str) -> Option<&table_list::Values> {
+    pub fn column(&self, key: &str) -> Option<&TableList> {
         self.values
             .get(key)
-            .and_then(|column| column.values.as_ref())
+            .map(|column| column)
     }
 
     fn roll_back(&mut self, elements: Vec<String>, mut row: TableRow) -> TableRow {
@@ -128,7 +128,7 @@ impl Table {
         let mut roll_back: Vec<String> = Vec::with_capacity(self.values.len());
         for (key, column) in self.values.iter_mut() {
             if let Some(value) = row.values.remove(key) {
-                if let Err(value) = column.push(value) {
+                if let Err(ArrowScalarError::InvalidScalar(value)) = column.push(value) {
                     row.values.insert(key.to_owned(), value);
                     break;
                 } else {
@@ -141,5 +141,39 @@ impl Table {
         } else {
             Ok(())
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use arrow::datatypes::{DataType, Field, Schema};
+
+    #[test]
+    fn test_table() {
+        let schema = Schema::new(vec![
+            Field::new("a", DataType::Int32, true),
+            Field::new("b", DataType::Int32, true),
+        ]);
+        let mut table = Table::new(&schema).unwrap();
+        table.push(TableRow {
+            values: vec![("a".to_string(), TableScalar::int32(1)), ("b".to_string(), TableScalar::int32(2))]
+                .into_iter()
+                .collect(),
+        }).unwrap();
+        table.push(TableRow {
+            values: vec![("a".to_string(), TableScalar::int32(3)), ("b".to_string(), TableScalar::int32(4))]
+                .into_iter()
+                .collect(),
+        }).unwrap();
+        
+        
+        let batch = table.to_arrow().unwrap();
+        let new_table = Table::from_arrow(&batch).unwrap();
+        assert_eq!(table.len(), 2);
+        assert_eq!(table.column("a").unwrap().len(), 2);
+        assert_eq!(table.column("b").unwrap().len(), 2);
+        assert_eq!(table, new_table);
+        
     }
 }
