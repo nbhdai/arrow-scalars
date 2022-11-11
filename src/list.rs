@@ -627,8 +627,8 @@ impl<T: Array> ListValuable for T {
                 }
                 IntervalUnit::MonthDayNano => {
                     return Err(ArrowScalarError::Unimplemented(
-                        "clone_as_list".to_string(),
-                        "IntervalUnit::MonthDayNano".to_string(),
+                        "clone_as_list",
+                        "IntervalUnit::MonthDayNano",
                     ));
                 }
             },
@@ -649,32 +649,32 @@ impl<T: Array> ListValuable for T {
             }
             DataType::Union(_fields, type_ids, mode) => {
                 return Err(ArrowScalarError::Unimplemented(
-                    "clone_as_list".to_string(),
-                    format!("Union({type_ids:?}, {mode:?})"),
+                    "clone_as_list",
+                    "Union",
                 ));
             }
             DataType::Dictionary(key_type, value_type) => {
                 return Err(ArrowScalarError::Unimplemented(
-                    "clone_as_list".to_string(),
-                    format!("Dictionary({key_type:?}, {value_type:?})"),
+                    "clone_as_list",
+                    "Dictionary",
                 ));
             }
             DataType::Decimal128(precision, scale) => {
                 return Err(ArrowScalarError::Unimplemented(
-                    "clone_as_list".to_string(),
-                    format!("Decimal128({precision:?}, {scale:?})"),
+                    "clone_as_list",
+                    "Decimal128",
                 ));
             }
             DataType::Decimal256(precision, scale) => {
                 return Err(ArrowScalarError::Unimplemented(
-                    "clone_as_list".to_string(),
-                    format!("Decimal256({precision:?}, {scale:?})"),
+                    "clone_as_list",
+                    "Decimal256",
                 ));
             }
             DataType::Map(key_type, value_type) => {
                 return Err(ArrowScalarError::Unimplemented(
-                    "clone_as_list".to_string(),
-                    format!("Map({key_type:?}, {value_type:?})"),
+                    "clone_as_list",
+                    "Map",
                 ));
             }
             DataType::Null => {
@@ -1200,8 +1200,8 @@ impl TableList {
                 }
                 IntervalUnit::MonthDayNano => {
                     return Err(ArrowScalarError::Unimplemented(
-                        "TableList::new".to_string(),
-                        "IntervalUnit::MonthDayNano".to_string(),
+                        "TableList::new",
+                        "IntervalUnit::MonthDayNano",
                     ))
                 }
             },
@@ -1258,20 +1258,20 @@ impl TableList {
             }
             DataType::Decimal128(_, _) => {
                 return Err(ArrowScalarError::Unimplemented(
-                    "TableList::new".to_string(),
-                    "Decimal128".to_string(),
+                    "TableList::new",
+                    "Decimal128",
                 ));
             }
             DataType::Decimal256(_, _) => {
                 return Err(ArrowScalarError::Unimplemented(
-                    "TableList::new".to_string(),
-                    "Decimal256".to_string(),
+                    "TableList::new",
+                    "Decimal256",
                 ));
             }
             DataType::Map(_, _) => {
                 return Err(ArrowScalarError::Unimplemented(
-                    "TableList::new".to_string(),
-                    "Map".to_string(),
+                    "TableList::new",
+                    "Map",
                 ));
             }
             DataType::Union(_, _, _) => table_list::Values::Union(table_list::UnionList::default()),
@@ -2249,8 +2249,8 @@ impl TableList {
                     }
                     _ => {
                         return Err(ArrowScalarError::Unimplemented(
-                            "TableList::to_array".to_string(),
-                            format!("{list_data_type:?}"),
+                            "TableList::to_array",
+                            "unknown",
                         ))
                     }
                 }
@@ -2304,8 +2304,8 @@ impl TableList {
                     }
                     _ => {
                         return Err(ArrowScalarError::Unimplemented(
-                            "TableList::to_array".to_string(),
-                            format!("{list_data_type:?}"),
+                            "TableList::to_array",
+                            "unknown",
                         ))
                     }
                 }
@@ -2524,14 +2524,14 @@ impl TableList {
             }
             table_list::Values::Dictionary(_) => {
                 return Err(ArrowScalarError::Unimplemented(
-                    "TableList::to_array".to_string(),
-                    "Dictionary".to_string(),
+                    "TableList::to_array",
+                    "Dictionary",
                 ));
             }
             table_list::Values::Union(_) => {
                 return Err(ArrowScalarError::Unimplemented(
-                    "TableList::to_array".to_string(),
-                    "Union".to_string(),
+                    "TableList::to_array",
+                    "Union",
                 ));
             }
             table_list::Values::FixedSizeBinary(list) => {
@@ -2547,8 +2547,8 @@ impl TableList {
             }
             table_list::Values::FixedSizeList(_list) => {
                 return Err(ArrowScalarError::Unimplemented(
-                    "TableList::to_array".to_string(),
-                    "FixedSizeList".to_string(),
+                    "TableList::to_array",
+                    "FixedSizeList",
                 ));
             }
         };
@@ -2639,13 +2639,13 @@ impl TableList {
             }
             table_list::Values::Union(table_list::UnionList { values: _, set: _ }) => {
                 Err(ArrowScalarError::Unimplemented(
-                    "TableList::data_type".to_string(),
-                    "Union".to_string(),
+                    "TableList::data_type",
+                    "Union",
                 ))
             }
             table_list::Values::Dictionary(_dict) => Err(ArrowScalarError::Unimplemented(
-                "TableList::data_type".to_string(),
-                "Union".to_string(),
+                "TableList::data_type",
+                "Union",
             )),
             table_list::Values::Time32Second(_) => Ok(DataType::Time32(TimeUnit::Second)),
             table_list::Values::Time32Millisecond(_) => Ok(DataType::Time32(TimeUnit::Millisecond)),

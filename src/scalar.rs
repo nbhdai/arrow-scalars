@@ -157,8 +157,8 @@ impl<T: Array> ScalarValuable for T {
                     ),
                     IntervalUnit::MonthDayNano => {
                         return Err(ArrowScalarError::Unimplemented(
-                            "Array::scalar".to_string(),
-                            "IntervalMonthDayNano".to_string(),
+                            "Array::scalar",
+                            "IntervalMonthDayNano",
                         ))
                     }
                 };
@@ -269,26 +269,26 @@ impl<T: Array> ScalarValuable for T {
             // Unsupported types
             DataType::Union(_, _, _) => {
                 return Err(ArrowScalarError::Unimplemented(
-                    "Array::scalar".to_string(),
-                    "Union".to_string(),
+                    "Array::scalar",
+                    "Union",
                 ));
             }
             DataType::Decimal128(_, _) => {
                 return Err(ArrowScalarError::Unimplemented(
-                    "Array::scalar".to_string(),
-                    "Decimal128".to_string(),
+                    "Array::scalar",
+                    "Decimal128",
                 ));
             }
             DataType::Decimal256(_, _) => {
                 return Err(ArrowScalarError::Unimplemented(
-                    "Array::scalar".to_string(),
-                    "Decimal256".to_string(),
+                    "Array::scalar",
+                    "Decimal256",
                 ));
             }
             DataType::Map(_, _) => {
                 return Err(ArrowScalarError::Unimplemented(
-                    "Array::scalar".to_string(),
-                    "Map".to_string(),
+                    "Array::scalar",
+                    "Map",
                 ));
             }
         };
@@ -378,20 +378,20 @@ impl TableScalar {
             }
             Some(table_scalar::Value::Union(_union)) => {
                 return Err(ArrowScalarError::Unimplemented(
-                    "TableScalar::data_type".to_string(),
-                    "Union".to_string(),
+                    "TableScalar::data_type",
+                    "Union",
                 ))
             }
             Some(table_scalar::Value::Dictionary(_dict)) => {
                 return Err(ArrowScalarError::Unimplemented(
-                    "TableScalar::data_type".to_string(),
-                    "Dictionary".to_string(),
+                    "TableScalar::data_type",
+                    "Dictionary",
                 ))
             }
             Some(table_scalar::Value::Map(_map)) => {
                 return Err(ArrowScalarError::Unimplemented(
-                    "TableScalar::data_type".to_string(),
-                    "Map".to_string(),
+                    "TableScalar::data_type",
+                    "Map",
                 ))
             }
             Some(table_scalar::Value::Null(_)) => DataType::Null,
