@@ -2178,7 +2178,7 @@ impl TableList {
                     .values
                     .iter()
                     .map(|(name, list)| {
-                        Ok((Field::new(name, list.data_type()?, false), list.to_array()?))
+                        Ok((Field::new(name, list.data_type()?, true), list.to_array()?))
                     })
                     .collect::<Result<Vec<_>, ArrowScalarError>>()?;
                 Arc::new(StructArray::from(arrays))
