@@ -282,7 +282,7 @@ impl<T: Array> ListValuable for T {
             }
             DataType::LargeList(list_type) => {
                 let list_type = Some(FieldProto::from_arrow(list_type));
-                let array = as_list_array(self);
+                let array = as_large_list_array(self);
                 let mut values = Vec::with_capacity(array.len());
                 let mut set = Vec::with_capacity(array.len());
                 for value in array.iter() {
@@ -303,11 +303,13 @@ impl<T: Array> ListValuable for T {
             }
             DataType::FixedSizeList(list_type, len) => {
                 let list_type = Some(FieldProto::from_arrow(list_type));
-                let array = as_list_array(self);
+                let array = self.as_any().downcast_ref::<FixedSizeListArray>().unwrap();
+
                 let mut values = Vec::with_capacity(array.len());
                 let mut set = Vec::with_capacity(array.len());
-                for value in array.iter() {
-                    if let Some(value) = value {
+                for i in 0..array.len() {
+                    if array.is_valid(i) {
+                        let value = array.value(i);
                         values.push(value.clone_as_list()?);
                         set.push(true);
                     } else {
@@ -640,18 +642,21 @@ impl<T: Array> ListValuable for T {
                     .collect::<Vec<_>>();
 
                 let set = (0..array.len()).map(|i| array.is_valid(i)).collect();
-                let values = (0..fields.len()).map(|i| {
-                    let field_array = array.column(i);
-                    field_array.clone_as_list()
-                }).collect::<Result<Vec<_>,_>>()?;
-                let struct_list = table_list::StructList { fields, values, set };
+                let values = (0..fields.len())
+                    .map(|i| {
+                        let field_array = array.column(i);
+                        field_array.clone_as_list()
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+                let struct_list = table_list::StructList {
+                    fields,
+                    values,
+                    set,
+                };
                 Some(table_list::Values::Struct(struct_list))
             }
             DataType::Union(_fields, _type_ids, _mode) => {
-                return Err(ArrowScalarError::Unimplemented(
-                    "clone_as_list",
-                    "Union",
-                ));
+                return Err(ArrowScalarError::Unimplemented("clone_as_list", "Union"));
             }
             DataType::Dictionary(_key_type, _value_type) => {
                 return Err(ArrowScalarError::Unimplemented(
@@ -672,10 +677,7 @@ impl<T: Array> ListValuable for T {
                 ));
             }
             DataType::Map(_key_type, _value_type) => {
-                return Err(ArrowScalarError::Unimplemented(
-                    "clone_as_list",
-                    "Map",
-                ));
+                return Err(ArrowScalarError::Unimplemented("clone_as_list", "Map"));
             }
             DataType::Null => {
                 unreachable!();
@@ -1269,10 +1271,7 @@ impl TableList {
                 ));
             }
             DataType::Map(_, _) => {
-                return Err(ArrowScalarError::Unimplemented(
-                    "TableList::new",
-                    "Map",
-                ));
+                return Err(ArrowScalarError::Unimplemented("TableList::new", "Map"));
             }
             DataType::Union(_, _, _) => table_list::Values::Union(table_list::UnionList::default()),
             DataType::Null => {
@@ -2247,10 +2246,50 @@ impl TableList {
                     data_type_proto::DataType::Float64(_) => {
                         primitive_list_list_builder_float64(list_list)
                     }
+                    data_type_proto::DataType::Time32Second(_) => {
+                        primitive_list_list_builder_time32_second(list_list)
+                    }
+                    data_type_proto::DataType::Time32Millisecond(_) => {
+                        primitive_list_list_builder_time32_millisecond(list_list)
+                    }
+                    data_type_proto::DataType::Time64Microsecond(_) => {
+                        primitive_list_list_builder_time64_microsecond(list_list)
+                    }
+                    data_type_proto::DataType::Time64Nanosecond(_) => {
+                        primitive_list_list_builder_time64_nanosecond(list_list)
+                    }
+                    data_type_proto::DataType::DurationSecond(_) => {
+                        primitive_list_list_builder_duration_second(list_list)
+                    }
+                    data_type_proto::DataType::DurationMillisecond(_) => {
+                        primitive_list_list_builder_duration_millisecond(list_list)
+                    }
+                    data_type_proto::DataType::DurationMicrosecond(_) => {
+                        primitive_list_list_builder_duration_microsecond(list_list)
+                    }
+                    data_type_proto::DataType::DurationNanosecond(_) => {
+                        primitive_list_list_builder_duration_nanosecond(list_list)
+                    }
+                    data_type_proto::DataType::Date32(_) => {
+                        primitive_list_list_builder_date32(list_list)
+                    }
+                    data_type_proto::DataType::Date64(_) => {
+                        primitive_list_list_builder_date64(list_list)
+                    }
+                    data_type_proto::DataType::IntervalYearMonth(_) => {
+                        primitive_list_list_builder_interval_year_month(list_list)
+                    }
+                    data_type_proto::DataType::IntervalDayTime(_) => {
+                        primitive_list_list_builder_interval_day_time(list_list)
+                    }
+                    data_type_proto::DataType::Utf8(_) => {
+                        string_list_list_builder(list_list)
+                    }
+
                     _ => {
                         return Err(ArrowScalarError::Unimplemented(
                             "TableList::to_array",
-                            "unknown",
+                            "DataType::List::Unknown",
                         ))
                     }
                 }
@@ -2270,42 +2309,81 @@ impl TableList {
                 let list_data_type = list_data_type.data_type.as_ref().unwrap();
                 match list_data_type {
                     data_type_proto::DataType::Int8(_) => {
-                        primitive_list_list_builder_int8(list_list)
+                        primitive_large_list_list_builder_int8(list_list)
                     }
                     data_type_proto::DataType::Int16(_) => {
-                        primitive_list_list_builder_int16(list_list)
+                        primitive_large_list_list_builder_int16(list_list)
                     }
                     data_type_proto::DataType::Int32(_) => {
-                        primitive_list_list_builder_int32(list_list)
+                        primitive_large_list_list_builder_int32(list_list)
                     }
                     data_type_proto::DataType::Int64(_) => {
-                        primitive_list_list_builder_int64(list_list)
+                        primitive_large_list_list_builder_int64(list_list)
                     }
                     data_type_proto::DataType::Uint8(_) => {
-                        primitive_list_list_builder_uint8(list_list)
+                        primitive_large_list_list_builder_uint8(list_list)
                     }
                     data_type_proto::DataType::Uint16(_) => {
-                        primitive_list_list_builder_uint16(list_list)
+                        primitive_large_list_list_builder_uint16(list_list)
                     }
                     data_type_proto::DataType::Uint32(_) => {
-                        primitive_list_list_builder_uint32(list_list)
+                        primitive_large_list_list_builder_uint32(list_list)
                     }
                     data_type_proto::DataType::Uint64(_) => {
-                        primitive_list_list_builder_uint64(list_list)
+                        primitive_large_list_list_builder_uint64(list_list)
                     }
                     data_type_proto::DataType::Float16(_) => {
-                        primitive_list_list_builder_float16(list_list)
+                        primitive_large_list_list_builder_float16(list_list)
                     }
                     data_type_proto::DataType::Float32(_) => {
-                        primitive_list_list_builder_float32(list_list)
+                        primitive_large_list_list_builder_float32(list_list)
                     }
                     data_type_proto::DataType::Float64(_) => {
-                        primitive_list_list_builder_float64(list_list)
+                        primitive_large_list_list_builder_float64(list_list)
+                    }
+                    data_type_proto::DataType::Time32Second(_) => {
+                        primitive_large_list_list_builder_time32_second(list_list)
+                    }
+                    data_type_proto::DataType::Time32Millisecond(_) => {
+                        primitive_large_list_list_builder_time32_millisecond(list_list)
+                    }
+                    data_type_proto::DataType::Time64Microsecond(_) => {
+                        primitive_large_list_list_builder_time64_microsecond(list_list)
+                    }
+                    data_type_proto::DataType::Time64Nanosecond(_) => {
+                        primitive_large_list_list_builder_time64_nanosecond(list_list)
+                    }
+                    data_type_proto::DataType::DurationSecond(_) => {
+                        primitive_large_list_list_builder_duration_second(list_list)
+                    }
+                    data_type_proto::DataType::DurationMillisecond(_) => {
+                        primitive_large_list_list_builder_duration_millisecond(list_list)
+                    }
+                    data_type_proto::DataType::DurationMicrosecond(_) => {
+                        primitive_large_list_list_builder_duration_microsecond(list_list)
+                    }
+                    data_type_proto::DataType::DurationNanosecond(_) => {
+                        primitive_large_list_list_builder_duration_nanosecond(list_list)
+                    }
+                    data_type_proto::DataType::Date32(_) => {
+                        primitive_large_list_list_builder_date32(list_list)
+                    }
+                    data_type_proto::DataType::Date64(_) => {
+                        primitive_large_list_list_builder_date64(list_list)
+                    }
+                    data_type_proto::DataType::IntervalYearMonth(_) => {
+                        primitive_large_list_list_builder_interval_year_month(list_list)
+                    }
+                    data_type_proto::DataType::IntervalDayTime(_) => {
+                        primitive_large_list_list_builder_interval_day_time(list_list)
+                    }
+                    data_type_proto::DataType::Utf8(_) => {
+                        string_large_list_list_builder(list_list)
                     }
                     _ => {
                         return Err(ArrowScalarError::Unimplemented(
                             "TableList::to_array",
-                            "unknown",
+                            "DataType::List::Unknown",
                         ))
                     }
                 }
@@ -2334,13 +2412,10 @@ impl TableList {
             }
             table_list::Values::Struct(struct_list) => {
                 let arrays = struct_list
-                .fields
-                .iter().zip(struct_list
-                    .values
-                    .iter())
-                    .map(|(field, list)| {
-                        Ok((field.to_arrow()?, list.to_array()?))
-                    })
+                    .fields
+                    .iter()
+                    .zip(struct_list.values.iter())
+                    .map(|(field, list)| Ok((field.to_arrow()?, list.to_array()?)))
                     .collect::<Result<Vec<_>, ArrowScalarError>>()?;
                 Arc::new(StructArray::from(arrays))
             }
@@ -2630,19 +2705,20 @@ impl TableList {
                     Err(ArrowScalarError::InvalidProtobuf)
                 }
             }
-            table_list::Values::Struct(table_list::StructList { fields, values: _, set: _ }) => {
+            table_list::Values::Struct(table_list::StructList {
+                fields,
+                values: _,
+                set: _,
+            }) => {
                 let fields = fields
                     .iter()
                     .map(|field| field.to_arrow())
                     .collect::<Result<Vec<_>, _>>()?;
                 Ok(DataType::Struct(fields))
             }
-            table_list::Values::Union(table_list::UnionList { values: _, set: _ }) => {
-                Err(ArrowScalarError::Unimplemented(
-                    "TableList::data_type",
-                    "Union",
-                ))
-            }
+            table_list::Values::Union(table_list::UnionList { values: _, set: _ }) => Err(
+                ArrowScalarError::Unimplemented("TableList::data_type", "Union"),
+            ),
             table_list::Values::Dictionary(_dict) => Err(ArrowScalarError::Unimplemented(
                 "TableList::data_type",
                 "Union",
@@ -2744,9 +2820,11 @@ impl TableList {
                 set: _,
                 size: _,
             }) => values.len(),
-            table_list::Values::Struct(table_list::StructList { fields: _, values, set: _ }) => {
-                values.first().map(|arr| arr.len()).unwrap_or(0)
-            }
+            table_list::Values::Struct(table_list::StructList {
+                fields: _,
+                values,
+                set: _,
+            }) => values.first().map(|arr| arr.len()).unwrap_or(0),
             table_list::Values::Union(table_list::UnionList { values, set: _ }) => values.len(),
             table_list::Values::Dictionary(dict) => {
                 let table_list::DictionaryList {
@@ -3128,13 +3206,13 @@ impl table_list::ListList {
 }
 
 macro_rules! small_primitive_list_ingestor {
-    ($func_name:ident, $primitive_type:ty, $values_type:ident, $list_type:ident) => {
+    ($func_name:ident, $primitive_type:ty, $values_type:ident, $list_type:ident, $list_size: ident) => {
         fn $func_name(list: &table_list::ListList) -> ArrayRef {
             let primitive_list_builder = PrimitiveBuilder::<$primitive_type>::with_capacity(
                 list.values.iter().map(|l| l.len()).sum(),
             );
             let mut list_builder =
-                ListBuilder::with_capacity(primitive_list_builder, list.values.len());
+                $list_size::with_capacity(primitive_list_builder, list.values.len());
 
             for list in list.values.iter() {
                 if let Some(table_list::Values::$values_type(table_list::$list_type {
@@ -3160,13 +3238,13 @@ macro_rules! small_primitive_list_ingestor {
     };
 }
 macro_rules! primitive_list_ingestor {
-    ($func_name:ident, $primitive_type:ty, $values_type:ident, $list_type:ident) => {
+    ($func_name:ident, $primitive_type:ty, $values_type:ident, $list_type:ident, $list_size: ident) => {
         fn $func_name(list: &table_list::ListList) -> ArrayRef {
             let primitive_list_builder = PrimitiveBuilder::<$primitive_type>::with_capacity(
                 list.values.iter().map(|l| l.len()).sum(),
             );
             let mut list_builder =
-                ListBuilder::with_capacity(primitive_list_builder, list.values.len());
+                $list_size::with_capacity(primitive_list_builder, list.values.len());
 
             for list in list.values.iter() {
                 if let Some(table_list::Values::$values_type(table_list::$list_type {
@@ -3211,60 +3289,388 @@ fn primitive_list_list_builder_float16(list: &table_list::ListList) -> ArrayRef 
     Arc::new(list_builder.finish())
 }
 
-small_primitive_list_ingestor!(primitive_list_list_builder_int8, Int8Type, Int8, Int8List);
+fn string_list_list_builder(list: &table_list::ListList) -> ArrayRef {
+    let mut list_builder = ListBuilder::new(StringBuilder::new());
+
+    for list in list.values.iter() {
+        if let Some(table_list::Values::Utf8(table_list::Utf8List { values, set })) =
+            &list.values
+        {
+            let string_list_builder = list_builder.values();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    string_list_builder.append_value(v);
+                } else {
+                    string_list_builder.append_null();
+                }
+            });
+            list_builder.append(true);
+        } else {
+            list_builder.append(false);
+        }
+    }
+    Arc::new(list_builder.finish())
+}
+
+fn string_large_list_list_builder(list: &table_list::ListList) -> ArrayRef {
+    let mut list_builder = LargeListBuilder::new(StringBuilder::new());
+
+    for list in list.values.iter() {
+        if let Some(table_list::Values::Utf8(table_list::Utf8List { values, set })) =
+            &list.values
+        {
+            let string_list_builder = list_builder.values();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    string_list_builder.append_value(v);
+                } else {
+                    string_list_builder.append_null();
+                }
+            });
+            list_builder.append(true);
+        } else {
+            list_builder.append(false);
+        }
+    }
+    Arc::new(list_builder.finish())
+}
+
+fn primitive_large_list_list_builder_float16(list: &table_list::ListList) -> ArrayRef {
+    let primitive_list_builder =
+        PrimitiveBuilder::<Float16Type>::with_capacity(list.values.iter().map(|l| l.len()).sum());
+    let mut list_builder =
+        LargeListBuilder::with_capacity(primitive_list_builder, list.values.len());
+
+    for list in list.values.iter() {
+        if let Some(table_list::Values::Float16(table_list::Float16List { values, set })) =
+            &list.values
+        {
+            let primitive_list_builder = list_builder.values();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    primitive_list_builder.append_value(f16::from_f32(*v));
+                } else {
+                    primitive_list_builder.append_null();
+                }
+            });
+            list_builder.append(true);
+        } else {
+            list_builder.append(false);
+        }
+    }
+    Arc::new(list_builder.finish())
+}
+
+small_primitive_list_ingestor!(
+    primitive_list_list_builder_int8,
+    Int8Type,
+    Int8,
+    Int8List,
+    ListBuilder
+);
 small_primitive_list_ingestor!(
     primitive_list_list_builder_int16,
     Int16Type,
     Int16,
-    Int16List
+    Int16List,
+    ListBuilder
 );
 primitive_list_ingestor!(
     primitive_list_list_builder_int32,
     Int32Type,
     Int32,
-    Int32List
+    Int32List,
+    ListBuilder
 );
 primitive_list_ingestor!(
     primitive_list_list_builder_int64,
     Int64Type,
     Int64,
-    Int64List
+    Int64List,
+    ListBuilder
 );
 small_primitive_list_ingestor!(
     primitive_list_list_builder_uint8,
     UInt8Type,
     Uint8,
-    UInt8List
+    UInt8List,
+    ListBuilder
 );
 small_primitive_list_ingestor!(
     primitive_list_list_builder_uint16,
     UInt16Type,
     Uint16,
-    UInt16List
+    UInt16List,
+    ListBuilder
 );
 primitive_list_ingestor!(
     primitive_list_list_builder_uint32,
     UInt32Type,
     Uint32,
-    UInt32List
+    UInt32List,
+    ListBuilder
 );
 primitive_list_ingestor!(
     primitive_list_list_builder_uint64,
     UInt64Type,
     Uint64,
-    UInt64List
+    UInt64List,
+    ListBuilder
 );
 primitive_list_ingestor!(
     primitive_list_list_builder_float32,
     Float32Type,
     Float32,
-    Float32List
+    Float32List,
+    ListBuilder
 );
 primitive_list_ingestor!(
     primitive_list_list_builder_float64,
     Float64Type,
     Float64,
-    Float64List
+    Float64List,
+    ListBuilder
+);
+
+primitive_list_ingestor!(
+    primitive_list_list_builder_time32_second,
+    Time32SecondType,
+    Time32Second,
+    Int32List,
+    ListBuilder
+);
+primitive_list_ingestor!(
+    primitive_list_list_builder_time32_millisecond,
+    Time32MillisecondType,
+    Time32Millisecond,
+    Int32List,
+    ListBuilder
+);
+primitive_list_ingestor!(
+    primitive_list_list_builder_time64_microsecond,
+    Time64MicrosecondType,
+    Time64Microsecond,
+    Int64List,
+    ListBuilder
+);
+primitive_list_ingestor!(
+    primitive_list_list_builder_time64_nanosecond,
+    Time64NanosecondType,
+    Time64Nanosecond,
+    Int64List,
+    ListBuilder
+);
+primitive_list_ingestor!(
+    primitive_list_list_builder_date32,
+    Date32Type,
+    Date32,
+    Int32List,
+    ListBuilder
+);
+primitive_list_ingestor!(
+    primitive_list_list_builder_date64,
+    Date64Type,
+    Date64,
+    Int64List,
+    ListBuilder
+);
+primitive_list_ingestor!(
+    primitive_list_list_builder_interval_year_month,
+    IntervalYearMonthType,
+    IntervalYearMonth,
+    Int32List,
+    ListBuilder
+);
+primitive_list_ingestor!(
+    primitive_list_list_builder_interval_day_time,
+    IntervalDayTimeType,
+    IntervalDayTime,
+    Int64List,
+    ListBuilder
+);
+primitive_list_ingestor!(
+    primitive_list_list_builder_duration_second,
+    DurationSecondType,
+    DurationSecond,
+    Int64List,
+    ListBuilder
+);
+primitive_list_ingestor!(
+    primitive_list_list_builder_duration_millisecond,
+    DurationMillisecondType,
+    DurationMillisecond,
+    Int64List,
+    ListBuilder
+);
+primitive_list_ingestor!(
+    primitive_list_list_builder_duration_microsecond,
+    DurationMicrosecondType,
+    DurationMicrosecond,
+    Int64List,
+    ListBuilder
+);
+primitive_list_ingestor!(
+    primitive_list_list_builder_duration_nanosecond,
+    DurationNanosecondType,
+    DurationNanosecond,
+    Int64List,
+    ListBuilder
+);
+
+small_primitive_list_ingestor!(
+    primitive_large_list_list_builder_int8,
+    Int8Type,
+    Int8,
+    Int8List,
+    LargeListBuilder
+);
+small_primitive_list_ingestor!(
+    primitive_large_list_list_builder_int16,
+    Int16Type,
+    Int16,
+    Int16List,
+    LargeListBuilder
+);
+primitive_list_ingestor!(
+    primitive_large_list_list_builder_int32,
+    Int32Type,
+    Int32,
+    Int32List,
+    LargeListBuilder
+);
+primitive_list_ingestor!(
+    primitive_large_list_list_builder_int64,
+    Int64Type,
+    Int64,
+    Int64List,
+    LargeListBuilder
+);
+small_primitive_list_ingestor!(
+    primitive_large_list_list_builder_uint8,
+    UInt8Type,
+    Uint8,
+    UInt8List,
+    LargeListBuilder
+);
+small_primitive_list_ingestor!(
+    primitive_large_list_list_builder_uint16,
+    UInt16Type,
+    Uint16,
+    UInt16List,
+    LargeListBuilder
+);
+primitive_list_ingestor!(
+    primitive_large_list_list_builder_uint32,
+    UInt32Type,
+    Uint32,
+    UInt32List,
+    LargeListBuilder
+);
+primitive_list_ingestor!(
+    primitive_large_list_list_builder_uint64,
+    UInt64Type,
+    Uint64,
+    UInt64List,
+    LargeListBuilder
+);
+primitive_list_ingestor!(
+    primitive_large_list_list_builder_float32,
+    Float32Type,
+    Float32,
+    Float32List,
+    LargeListBuilder
+);
+primitive_list_ingestor!(
+    primitive_large_list_list_builder_float64,
+    Float64Type,
+    Float64,
+    Float64List,
+    LargeListBuilder
+);
+
+primitive_list_ingestor!(
+    primitive_large_list_list_builder_time32_second,
+    Time32SecondType,
+    Time32Second,
+    Int32List,
+    LargeListBuilder
+);
+primitive_list_ingestor!(
+    primitive_large_list_list_builder_time32_millisecond,
+    Time32MillisecondType,
+    Time32Millisecond,
+    Int32List,
+    LargeListBuilder
+);
+primitive_list_ingestor!(
+    primitive_large_list_list_builder_time64_microsecond,
+    Time64MicrosecondType,
+    Time64Microsecond,
+    Int64List,
+    LargeListBuilder
+);
+primitive_list_ingestor!(
+    primitive_large_list_list_builder_time64_nanosecond,
+    Time64NanosecondType,
+    Time64Nanosecond,
+    Int64List,
+    LargeListBuilder
+);
+primitive_list_ingestor!(
+    primitive_large_list_list_builder_date32,
+    Date32Type,
+    Date32,
+    Int32List,
+    LargeListBuilder
+);
+primitive_list_ingestor!(
+    primitive_large_list_list_builder_date64,
+    Date64Type,
+    Date64,
+    Int64List,
+    LargeListBuilder
+);
+primitive_list_ingestor!(
+    primitive_large_list_list_builder_interval_year_month,
+    IntervalYearMonthType,
+    IntervalYearMonth,
+    Int32List,
+    LargeListBuilder
+);
+primitive_list_ingestor!(
+    primitive_large_list_list_builder_interval_day_time,
+    IntervalDayTimeType,
+    IntervalDayTime,
+    Int64List,
+    LargeListBuilder
+);
+primitive_list_ingestor!(
+    primitive_large_list_list_builder_duration_second,
+    DurationSecondType,
+    DurationSecond,
+    Int64List,
+    LargeListBuilder
+);
+primitive_list_ingestor!(
+    primitive_large_list_list_builder_duration_millisecond,
+    DurationMillisecondType,
+    DurationMillisecond,
+    Int64List,
+    LargeListBuilder
+);
+primitive_list_ingestor!(
+    primitive_large_list_list_builder_duration_microsecond,
+    DurationMicrosecondType,
+    DurationMicrosecond,
+    Int64List,
+    LargeListBuilder
+);
+primitive_list_ingestor!(
+    primitive_large_list_list_builder_duration_nanosecond,
+    DurationNanosecondType,
+    DurationNanosecond,
+    Int64List,
+    LargeListBuilder
 );
 
 #[cfg(test)]
@@ -3272,7 +3678,7 @@ pub mod tests {
     use std::ops::Deref;
 
     use super::*;
-    use crate::table_list::Float16List;
+    use crate::table_list::{Float16List, ListList};
 
     macro_rules! primitive_list_test {
         ($func_name:ident, $prim_type:expr, $array_type:ty, $values_type:ident, $list_type:ident, $values:expr, $intended_values:expr, $set:expr) => {
@@ -3761,5 +4167,131 @@ pub mod tests {
             as_primitive_array::<Float16Type>(&list.to_array().unwrap()),
             &array
         );
+    }
+    #[test]
+    fn test_primitive_list_list_test() {
+        let list = TableList {
+            values: Some(table_list::Values::Float32(table_list::Float32List {
+                values: vec![1.0, 2.0, 5.0, 3.0, 4.0],
+                set: vec![true, true, true, true, true],
+            })),
+        };
+        let intended_list = TableList {
+            values: Some(table_list::Values::List(ListList {
+                values: vec![
+                    list.clone(),
+                    list.clone(),
+                    list.clone(),
+                    list.clone(),
+                    list.clone(),
+                ],
+                set: vec![true, true, true, true, true],
+                list_type: Some(FieldProto {
+                    name: "item".to_string(),
+                    data_type: Some(Box::new(DataTypeProto::from_arrow(&DataType::Float32))),
+                    nullable: true,
+                }),
+                size: None,
+            })),
+        };
+        let mut list_builder = ListBuilder::new(PrimitiveBuilder::<Float32Type>::new());
+        for _ in 0..5 {
+            list_builder
+                .values()
+                .append_slice(&[1.0, 2.0, 5.0, 3.0, 4.0]);
+            list_builder.append(true);
+        }
+
+        let array = list_builder.finish();
+        let list = array.clone_as_list().unwrap();
+
+        assert_eq!(intended_list, list);
+        assert_eq!(as_list_array(&list.to_array().unwrap()), &array);
+    }
+
+    #[test]
+    fn test_primitive_large_list_list_test() {
+        let list = TableList {
+            values: Some(table_list::Values::Float32(table_list::Float32List {
+                values: vec![1.0, 2.0, 5.0, 3.0, 4.0],
+                set: vec![true, true, true, true, true],
+            })),
+        };
+        let intended_list = TableList {
+            values: Some(table_list::Values::LargeList(ListList {
+                values: vec![
+                    list.clone(),
+                    list.clone(),
+                    list.clone(),
+                    list.clone(),
+                    list.clone(),
+                ],
+                set: vec![true, true, true, true, true],
+                list_type: Some(FieldProto {
+                    name: "item".to_string(),
+                    data_type: Some(Box::new(DataTypeProto::from_arrow(&DataType::Float32))),
+                    nullable: true,
+                }),
+                size: None,
+            })),
+        };
+        let mut list_builder = LargeListBuilder::new(PrimitiveBuilder::<Float32Type>::new());
+        for _ in 0..5 {
+            list_builder
+                .values()
+                .append_slice(&[1.0, 2.0, 5.0, 3.0, 4.0]);
+            list_builder.append(true);
+        }
+
+        let array = list_builder.finish();
+        let list = array.clone_as_list().unwrap();
+
+        assert_eq!(intended_list, list);
+        assert_eq!(as_large_list_array(&list.to_array().unwrap()), &array);
+    }
+
+    #[test]
+    fn test_string_list_list_test() {
+        let values = vec!["one".to_string(), "2.0".to_string(), "5.0".to_string(), "".to_string(), "redde".to_string()];
+        let list = TableList {
+            values: Some(table_list::Values::Utf8(table_list::Utf8List {
+                values: values.clone(),
+                set: vec![true, true, true, true, true],
+            })),
+        };
+        let intended_list = TableList {
+            values: Some(table_list::Values::List(ListList {
+                values: vec![
+                    list.clone(),
+                    list.clone(),
+                    list.clone(),
+                    list.clone(),
+                    list.clone(),
+                ],
+                set: vec![true, true, true, true, true],
+                list_type: Some(FieldProto {
+                    name: "item".to_string(),
+                    data_type: Some(Box::new(DataTypeProto::from_arrow(&DataType::Utf8))),
+                    nullable: true,
+                }),
+                size: None,
+            })),
+        };
+        let mut list_builder = ListBuilder::new(StringBuilder::new());
+        for _ in 0..5 {
+
+            let string_builder = list_builder
+                .values();
+            for value in values.iter() {
+                string_builder.append_value(value);
+            }
+            list_builder.append(true);
+        }
+
+        let array = list_builder.finish();
+        let list = array.clone_as_list().unwrap();
+
+        assert_eq!(intended_list, list);
+        assert_eq!(as_list_array(&list.to_array().unwrap()), &array);
     }
 }

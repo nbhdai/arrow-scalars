@@ -1,7 +1,8 @@
 use std::{collections::HashMap, sync::Arc};
 
 use crate::{
-    ArrowScalarError, ListValuable, ScalarValuable, Table, TableList, TableRow, TableScalar, FieldProto,
+    ArrowScalarError, FieldProto, ListValuable, ScalarValuable, Table, TableList, TableRow,
+    TableScalar,
 };
 use arrow::{
     datatypes::{Field, Schema},
@@ -37,23 +38,26 @@ impl RowValuable for RecordBatch {
 impl RowValuable for Table {
     fn row(&self, index: usize) -> Result<TableRow, ArrowScalarError> {
         let values = self
-        .fields
-        .iter().zip(self
-            .values
-            .iter())
+            .fields
+            .iter()
+            .zip(self.values.iter())
             .map(|(name, column)| Ok((name.name.to_owned(), column.scalar(index)?)))
             .collect::<Result<HashMap<String, TableScalar>, ArrowScalarError>>()?;
         Ok(TableRow { values })
     }
 
     fn column_value(&self, column: &str, index: usize) -> Result<TableScalar, ArrowScalarError> {
-        self.fields.iter().zip(self.values.iter()).find_map(|(field, value)| {
-            if field.name == column {
-                Some(value.scalar(index))
-            } else {
-                None
-            }
-        }).unwrap_or(Err(ArrowScalarError::AccessError))
+        self.fields
+            .iter()
+            .zip(self.values.iter())
+            .find_map(|(field, value)| {
+                if field.name == column {
+                    Some(value.scalar(index))
+                } else {
+                    None
+                }
+            })
+            .unwrap_or(Err(ArrowScalarError::AccessError))
     }
 }
 
@@ -78,20 +82,20 @@ impl Table {
     }
 
     pub fn column_by_name(&self, name: &str) -> Option<&TableList> {
-        self.fields.iter().zip(self.values.iter()).find_map(|(field, value)| {
-            if field.name == name {
-                Some(value)
-            } else {
-                None
-            }
-        })
+        self.fields
+            .iter()
+            .zip(self.values.iter())
+            .find_map(|(field, value)| {
+                if field.name == name {
+                    Some(value)
+                } else {
+                    None
+                }
+            })
     }
 
     pub fn len(&self) -> usize {
-        self.values
-            .first()
-            .map(|column| column.len())
-            .unwrap_or(0)
+        self.values.first().map(|column| column.len()).unwrap_or(0)
     }
 
     pub fn is_empty(&self) -> bool {
@@ -111,7 +115,9 @@ impl Table {
     pub fn from_arrow(records: &RecordBatch) -> Result<Self, ArrowScalarError> {
         let schema = records.schema();
         let fields = schema.fields().iter().map(FieldProto::from_arrow).collect();
-        let values = records.columns().iter()
+        let values = records
+            .columns()
+            .iter()
             .map(|column| column.clone_as_list())
             .collect::<Result<Vec<_>, ArrowScalarError>>()?;
         Ok(Self { values, fields })
@@ -123,16 +129,18 @@ impl Table {
 
     fn roll_back(&mut self, index: usize, mut row: TableRow) -> TableRow {
         for i in 0..index {
-            row.values.insert(self.fields[i].name.to_owned(), self.values[i].pop().unwrap());
+            row.values.insert(
+                self.fields[i].name.to_owned(),
+                self.values[i].pop().unwrap(),
+            );
         }
         row
     }
     // todo test this
     pub fn push(&mut self, mut row: TableRow) -> Result<(), TableRow> {
-        
-        for (i,(field, values)) in self.fields.iter().zip(self.values.iter_mut()).enumerate() {
+        for (i, (field, values)) in self.fields.iter().zip(self.values.iter_mut()).enumerate() {
             if let Some(value) = row.values.remove(&field.name) {
-                if let Err(ArrowScalarError::InvalidScalar(scalar)) =  values.push(value) {
+                if let Err(ArrowScalarError::InvalidScalar(scalar)) = values.push(value) {
                     row.values.insert(field.name.to_owned(), scalar);
                     return Err(self.roll_back(i, row));
                 }

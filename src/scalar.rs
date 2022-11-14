@@ -104,18 +104,14 @@ impl<T: Array> ScalarValuable for T {
                 }
                 TimeUnit::Millisecond => {
                     let array = as_primitive_array::<Time32MillisecondType>(self);
-                    Some(table_scalar::Value::Time32Millisecond(
-                        array.value(i),
-                    ))
+                    Some(table_scalar::Value::Time32Millisecond(array.value(i)))
                 }
                 _ => unreachable!(),
             },
             DataType::Time64(unit) => match unit {
                 TimeUnit::Microsecond => {
                     let array = as_primitive_array::<Time64MicrosecondType>(self);
-                    Some(table_scalar::Value::Time64Microsecond(
-                        array.value(i),
-                    ))
+                    Some(table_scalar::Value::Time64Microsecond(array.value(i)))
                 }
                 TimeUnit::Nanosecond => {
                     let array = as_primitive_array::<Time64NanosecondType>(self);
@@ -130,21 +126,15 @@ impl<T: Array> ScalarValuable for T {
                 }
                 TimeUnit::Millisecond => {
                     let array = as_primitive_array::<TimestampMillisecondType>(self);
-                    Some(table_scalar::Value::TimestampMillisecond(
-                        array.value(i),
-                    ))
+                    Some(table_scalar::Value::TimestampMillisecond(array.value(i)))
                 }
                 TimeUnit::Microsecond => {
                     let array = as_primitive_array::<TimestampMicrosecondType>(self);
-                    Some(table_scalar::Value::TimestampMicrosecond(
-                        array.value(i),
-                    ))
+                    Some(table_scalar::Value::TimestampMicrosecond(array.value(i)))
                 }
                 TimeUnit::Nanosecond => {
                     let array = as_primitive_array::<TimestampNanosecondType>(self);
-                    Some(table_scalar::Value::TimestampNanosecond(
-                        array.value(i),
-                    ))
+                    Some(table_scalar::Value::TimestampNanosecond(array.value(i)))
                 }
             },
             DataType::Interval(interval) => {
@@ -268,10 +258,7 @@ impl<T: Array> ScalarValuable for T {
             }
             // Unsupported types
             DataType::Union(_, _, _) => {
-                return Err(ArrowScalarError::Unimplemented(
-                    "Array::scalar",
-                    "Union",
-                ));
+                return Err(ArrowScalarError::Unimplemented("Array::scalar", "Union"));
             }
             DataType::Decimal128(_, _) => {
                 return Err(ArrowScalarError::Unimplemented(
@@ -286,10 +273,7 @@ impl<T: Array> ScalarValuable for T {
                 ));
             }
             DataType::Map(_, _) => {
-                return Err(ArrowScalarError::Unimplemented(
-                    "Array::scalar",
-                    "Map",
-                ));
+                return Err(ArrowScalarError::Unimplemented("Array::scalar", "Map"));
             }
         };
         Ok(TableScalar { value })
