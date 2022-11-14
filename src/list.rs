@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::ScalarValuable;
-use crate::dict_array_builder::dict_builder;
+use crate::dict_array_builder::{dict_builder, list_dict_builder, dict_array_to_proto};
 use crate::{
     data_type_proto, table_list, table_scalar, ArrowScalarError, DataTypeProto, FieldProto,
     TableList, TableScalar,
@@ -659,11 +659,59 @@ impl<T: Array> ListValuable for T {
             DataType::Union(_fields, _type_ids, _mode) => {
                 return Err(ArrowScalarError::Unimplemented("clone_as_list", "Union"));
             }
-            DataType::Dictionary(_key_type, _value_type) => {
-                return Err(ArrowScalarError::Unimplemented(
-                    "clone_as_list",
-                    "Dictionary",
-                ));
+            DataType::Dictionary(key_type, value_type) => {
+                let array = match key_type.as_ref() {
+                    DataType::Int8 => {
+                        let array = as_dictionary_array::<Int8Type>(self);
+                        let mut dict_arr = dict_array_to_proto(array, value_type)?;
+                        dict_arr.index_type = Some(DataTypeProto::from_arrow(&DataType::Int8));
+                        dict_arr
+                    }
+                    DataType::Int16 => {
+                        let array = as_dictionary_array::<Int16Type>(self);
+                        let mut dict_arr = dict_array_to_proto(array, value_type)?;
+                        dict_arr.index_type = Some(DataTypeProto::from_arrow(&DataType::Int16));
+                        dict_arr
+                    }
+                    DataType::Int32 => {
+                        let array = as_dictionary_array::<Int32Type>(self);
+                        let mut dict_arr = dict_array_to_proto(array, value_type)?;
+                        dict_arr.index_type = Some(DataTypeProto::from_arrow(&DataType::Int32));
+                        dict_arr
+                    }
+                    DataType::Int64 => {
+                        let array = as_dictionary_array::<Int64Type>(self);
+                        let mut dict_arr = dict_array_to_proto(array, value_type)?;
+                        dict_arr.index_type = Some(DataTypeProto::from_arrow(&DataType::Int64));
+                        dict_arr
+                    }
+                    DataType::UInt8 => {
+                        let array = as_dictionary_array::<UInt8Type>(self);
+                        let mut dict_arr = dict_array_to_proto(array, value_type)?;
+                        dict_arr.index_type = Some(DataTypeProto::from_arrow(&DataType::UInt8));
+                        dict_arr
+                    }
+                    DataType::UInt16 => {
+                        let array = as_dictionary_array::<UInt16Type>(self);
+                        let mut dict_arr = dict_array_to_proto(array, value_type)?;
+                        dict_arr.index_type = Some(DataTypeProto::from_arrow(&DataType::UInt16));
+                        dict_arr
+                    }
+                    DataType::UInt32 => {
+                        let array = as_dictionary_array::<UInt32Type>(self);
+                        let mut dict_arr = dict_array_to_proto(array, value_type)?;
+                        dict_arr.index_type = Some(DataTypeProto::from_arrow(&DataType::UInt32));
+                        dict_arr
+                    }
+                    DataType::UInt64 => {
+                        let array = as_dictionary_array::<UInt64Type>(self);
+                        let mut dict_arr = dict_array_to_proto(array, value_type)?;
+                        dict_arr.index_type = Some(DataTypeProto::from_arrow(&DataType::UInt64));
+                        dict_arr
+                    }
+                    _ => unreachable!(),
+                };
+                Some(table_list::Values::Dictionary(Box::new(array)))
             }
             DataType::Decimal128(_precision, _scale) => {
                 return Err(ArrowScalarError::Unimplemented(
@@ -1570,7 +1618,6 @@ impl TableList {
             }
             (table_list::Values::Dictionary(values), table_scalar::Value::Dictionary(dict)) => {
                 values.values.as_mut().expect("valid proto").push(*dict)?;
-                values.set.push(true);
             }
             (_, val) => {
                 return Err(ArrowScalarError::InvalidScalar(TableScalar {
@@ -1742,14 +1789,11 @@ impl TableList {
                 let table_list::DictionaryList {
                     values,
                     index_type: _,
-                    set,
                 } = dict.as_mut();
-                let value = values.as_mut().and_then(|v| {
+                values.as_mut().and_then(|v| {
                     v.pop()
                         .map(|val| table_scalar::Value::Dictionary(Box::new(val)))
-                });
-                let set = set.pop();
-                pop_value_ret(value, set)
+                })
             }
             table_list::Values::Time32Second(table_list::Int32List { values, set }) => {
                 let value = values.pop().map(table_scalar::Value::Time32Second);
@@ -2286,6 +2330,39 @@ impl TableList {
                     data_type_proto::DataType::Utf8(_) => {
                         string_list_list_builder(list_list)
                     }
+                    data_type_proto::DataType::Dictionary(dict) => {
+                        let data_type_proto::Dictionary {key_type, value_type} = dict.as_ref();
+                        let value_type = value_type.as_ref().ok_or(ArrowScalarError::InvalidProtobuf)?;
+                        let key_type = key_type.as_ref().ok_or(ArrowScalarError::InvalidProtobuf)?;
+                        match key_type.data_type.as_ref().ok_or(ArrowScalarError::InvalidProtobuf)? {
+                            data_type_proto::DataType::Int8(_) => {
+                                list_dict_builder::<Int8Type>(value_type.to_arrow()?, list_list)?
+                            }
+                            data_type_proto::DataType::Int16(_) => {
+                                list_dict_builder::<Int16Type>(value_type.to_arrow()?, list_list)?
+                            }
+                            data_type_proto::DataType::Int32(_) => {
+                                list_dict_builder::<Int32Type>(value_type.to_arrow()?, list_list)?
+                            }
+                            data_type_proto::DataType::Int64(_) => {
+                                list_dict_builder::<Int64Type>(value_type.to_arrow()?, list_list)?
+                            }
+                            data_type_proto::DataType::Uint8(_) => {
+                                list_dict_builder::<UInt8Type>(value_type.to_arrow()?, list_list)?
+                            }
+                            data_type_proto::DataType::Uint16(_) => {
+                                list_dict_builder::<UInt16Type>(value_type.to_arrow()?, list_list)?
+                            }
+                            data_type_proto::DataType::Uint32(_) => {
+                                list_dict_builder::<UInt32Type>(value_type.to_arrow()?, list_list)?
+                            }
+                            data_type_proto::DataType::Uint64(_) => {
+                                list_dict_builder::<UInt64Type>(value_type.to_arrow()?, list_list)?
+                            }
+                            _ => return Err(ArrowScalarError::InvalidProtobuf),
+                        }
+                        
+                    }
 
                     _ => {
                         return Err(ArrowScalarError::Unimplemented(
@@ -2296,18 +2373,9 @@ impl TableList {
                 }
             }
             table_list::Values::LargeList(list_list) => {
-                if list_list.list_type.is_none() {
-                    return Err(ArrowScalarError::InvalidProtobuf);
-                }
-                let list_type = list_list.list_type.as_ref().unwrap();
-                if list_type.data_type.is_none() {
-                    return Err(ArrowScalarError::InvalidProtobuf);
-                }
-                let list_data_type = list_type.data_type.as_ref().unwrap();
-                if list_data_type.data_type.is_none() {
-                    return Err(ArrowScalarError::InvalidProtobuf);
-                }
-                let list_data_type = list_data_type.data_type.as_ref().unwrap();
+                let list_type = list_list.list_type.as_ref().ok_or(ArrowScalarError::InvalidProtobuf)?;
+                let list_data_type = list_type.data_type.as_ref().ok_or(ArrowScalarError::InvalidProtobuf)?;
+                let list_data_type = list_data_type.data_type.as_ref().ok_or(ArrowScalarError::InvalidProtobuf)?;
                 match list_data_type {
                     data_type_proto::DataType::Int8(_) => {
                         primitive_large_list_list_builder_int8(list_list)
@@ -2381,10 +2449,16 @@ impl TableList {
                     data_type_proto::DataType::Utf8(_) => {
                         string_large_list_list_builder(list_list)
                     }
+                    data_type_proto::DataType::Dictionary(_dict) => {
+                        return Err(ArrowScalarError::Unimplemented(
+                            "TableList::to_array",
+                            "DataType::LargeList::Dictionary",
+                        ))                        
+                    }
                     _ => {
                         return Err(ArrowScalarError::Unimplemented(
                             "TableList::to_array",
-                            "DataType::List::Unknown",
+                            "DataType::LargeList::Unknown",
                         ))
                     }
                 }
@@ -2599,11 +2673,7 @@ impl TableList {
                 Arc::new(builder.finish())
             }
             table_list::Values::Dictionary(dictionary_list) => {
-                let key_type = if let Some(dict) = &dictionary_list.index_type {
-                    dict.to_arrow()?
-                } else {
-                    return Err(ArrowScalarError::InvalidProtobuf);
-                };
+                let key_type = dictionary_list.index_type.as_ref().ok_or(ArrowScalarError::InvalidProtobuf)?.to_arrow()?;
                 let values = if let Some(values) = &dictionary_list.values {
                     values
                 } else {
@@ -2866,7 +2936,6 @@ impl TableList {
                 let table_list::DictionaryList {
                     values,
                     index_type: _,
-                    set: _,
                 } = dict.as_ref();
                 values.as_ref().map(|a| a.len()).unwrap_or(0)
             }
@@ -4327,6 +4396,57 @@ pub mod tests {
         let array = list_builder.finish();
         let list = array.clone_as_list().unwrap();
 
+        assert_eq!(intended_list, list);
+        assert_eq!(as_list_array(&list.to_array().unwrap()), &array);
+    }
+
+    #[test]
+    fn test_dict_list_test() {
+        let values = vec!["one".to_string(), "2.0".to_string(), "5.0".to_string(), "".to_string(), "redde".to_string()];
+        let list = TableList {
+            values: Some(table_list::Values::Utf8(table_list::Utf8List {
+                values: values.clone(),
+                set: vec![true, true, true, true, true],
+            })),
+        };
+        let dict_list = TableList {
+            values: Some(table_list::Values::Dictionary(Box::new(table_list::DictionaryList {
+            values: Some(Box::new(list.clone())),
+            index_type: Some(DataTypeProto::from_arrow(&DataType::Int32)),
+        })))};
+
+        let intended_list = TableList {
+            values: Some(table_list::Values::List(ListList {
+                values: vec![
+                    dict_list.clone(),
+                    dict_list.clone(),
+                    dict_list.clone(),
+                    dict_list.clone(),
+                    dict_list,
+                ],
+                set: vec![true, true, true, true, true],
+                list_type: Some(FieldProto {
+                    name: "item".to_string(),
+                    data_type: Some(Box::new(DataTypeProto::from_arrow(&DataType::Dictionary(Box::new(DataType::Int32), Box::new(DataType::Utf8))))),
+                    nullable: true,
+                }),
+                size: None,
+            })),
+        };
+    
+
+        let mut list_builder = ListBuilder::new(StringDictionaryBuilder::<Int32Type>::new());
+        for _ in 0..5 {
+
+            let string_builder = list_builder
+                .values();
+            for value in values.iter() {
+                string_builder.append(value).unwrap();
+            }
+            list_builder.append(true);
+        }
+        let array = list_builder.finish();
+        let list = array.clone_as_list().unwrap();
         assert_eq!(intended_list, list);
         assert_eq!(as_list_array(&list.to_array().unwrap()), &array);
     }
