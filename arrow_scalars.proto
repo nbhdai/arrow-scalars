@@ -253,9 +253,8 @@ message TableList {
     }
     message ListList {
         repeated TableList values = 1;
-        repeated bool set = 2;
-        FieldProto list_type = 3;
-        optional int32 size = 4;
+        FieldProto list_type = 2;
+        optional int32 size = 3;
     }
     oneof values {
         BooleanList boolean = 2;

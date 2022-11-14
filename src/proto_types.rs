@@ -40,6 +40,13 @@ impl FieldProto {
             nullable: field.is_nullable(),
         }
     }
+    pub fn data_type(&self) -> Result<DataType, ArrowScalarError> {
+        if let Some(data_type) = &self.data_type {
+            data_type.to_arrow()
+        } else {
+            Err(ArrowScalarError::InvalidProtobuf)
+        }
+    }
 }
 
 impl SchemaProto {

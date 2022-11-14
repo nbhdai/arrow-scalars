@@ -451,11 +451,9 @@ pub mod table_list {
     pub struct ListList {
         #[prost(message, repeated, tag="1")]
         pub values: ::prost::alloc::vec::Vec<super::TableList>,
-        #[prost(bool, repeated, tag="2")]
-        pub set: ::prost::alloc::vec::Vec<bool>,
-        #[prost(message, optional, tag="3")]
+        #[prost(message, optional, tag="2")]
         pub list_type: ::core::option::Option<super::FieldProto>,
-        #[prost(int32, optional, tag="4")]
+        #[prost(int32, optional, tag="3")]
         pub size: ::core::option::Option<i32>,
     }
     #[derive(Clone, PartialEq, ::prost::Oneof)]
