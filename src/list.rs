@@ -2247,6 +2247,54 @@ impl TableList {
                     data_type_proto::DataType::Float64(_) => {
                         primitive_list_list_builder_float64(list_list)
                     }
+                    data_type_proto::DataType::Time32Second(_) => {
+                        primitive_list_list_builder_time32_second(list_list)
+                    }
+                    data_type_proto::DataType::Time32Millisecond(_) => {
+                        primitive_list_list_builder_time32_millisecond(list_list)
+                    }
+                    data_type_proto::DataType::Time64Microsecond(_) => {
+                        primitive_list_list_builder_time64_microsecond(list_list)
+                    }
+                    data_type_proto::DataType::Time64Nanosecond(_) => {
+                        primitive_list_list_builder_time64_nanosecond(list_list)
+                    }
+                    data_type_proto::DataType::DurationSecond(_) => {
+                        primitive_list_list_builder_duration_second(list_list)
+                    }
+                    data_type_proto::DataType::DurationMillisecond(_) => {
+                        primitive_list_list_builder_duration_millisecond(list_list)
+                    }
+                    data_type_proto::DataType::DurationMicrosecond(_) => {
+                        primitive_list_list_builder_duration_microsecond(list_list)
+                    }
+                    data_type_proto::DataType::DurationNanosecond(_) => {
+                        primitive_list_list_builder_duration_nanosecond(list_list)
+                    }
+                    data_type_proto::DataType::Date32(_) => {
+                        primitive_list_list_builder_date32(list_list)
+                    }
+                    data_type_proto::DataType::Date64(_) => {
+                        primitive_list_list_builder_date64(list_list)
+                    }
+                    data_type_proto::DataType::IntervalYearMonth(_) => {
+                        primitive_list_list_builder_interval_year_month(list_list)
+                    }
+                    data_type_proto::DataType::IntervalDayTime(_) => {
+                        primitive_list_list_builder_interval_day_time(list_list)
+                    }
+                    data_type_proto::DataType::TimestampSecond(_) => {
+                        time_list_list_builder_timestamp_second(list_list)
+                    }
+                    data_type_proto::DataType::TimestampMillisecond(_) => {
+                        time_list_list_builder_timestamp_millisecond(list_list)
+                    }
+                    data_type_proto::DataType::TimestampMicrosecond(_) => {
+                        time_list_list_builder_timestamp_microsecond(list_list)
+                    }
+                    data_type_proto::DataType::TimestampNanosecond(_) => {
+                        time_list_list_builder_timestamp_nanosecond(list_list)
+                    }
                     _ => {
                         return Err(ArrowScalarError::Unimplemented(
                             "TableList::to_array",
@@ -2301,6 +2349,54 @@ impl TableList {
                     }
                     data_type_proto::DataType::Float64(_) => {
                         primitive_list_list_builder_float64(list_list)
+                    }
+                    data_type_proto::DataType::Time32Second(_) => {
+                        primitive_list_list_builder_time32_second(list_list)
+                    }
+                    data_type_proto::DataType::Time32Millisecond(_) => {
+                        primitive_list_list_builder_time32_millisecond(list_list)
+                    }
+                    data_type_proto::DataType::Time64Microsecond(_) => {
+                        primitive_list_list_builder_time64_microsecond(list_list)
+                    }
+                    data_type_proto::DataType::Time64Nanosecond(_) => {
+                        primitive_list_list_builder_time64_nanosecond(list_list)
+                    }
+                    data_type_proto::DataType::DurationSecond(_) => {
+                        primitive_list_list_builder_duration_second(list_list)
+                    }
+                    data_type_proto::DataType::DurationMillisecond(_) => {
+                        primitive_list_list_builder_duration_millisecond(list_list)
+                    }
+                    data_type_proto::DataType::DurationMicrosecond(_) => {
+                        primitive_list_list_builder_duration_microsecond(list_list)
+                    }
+                    data_type_proto::DataType::DurationNanosecond(_) => {
+                        primitive_list_list_builder_duration_nanosecond(list_list)
+                    }
+                    data_type_proto::DataType::Date32(_) => {
+                        primitive_list_list_builder_date32(list_list)
+                    }
+                    data_type_proto::DataType::Date64(_) => {
+                        primitive_list_list_builder_date64(list_list)
+                    }
+                    data_type_proto::DataType::IntervalYearMonth(_) => {
+                        primitive_list_list_builder_interval_year_month(list_list)
+                    }
+                    data_type_proto::DataType::IntervalDayTime(_) => {
+                        primitive_list_list_builder_interval_day_time(list_list)
+                    }
+                    data_type_proto::DataType::TimestampSecond(_) => {
+                        time_list_list_builder_timestamp_second(list_list)
+                    }
+                    data_type_proto::DataType::TimestampMillisecond(_) => {
+                        time_list_list_builder_timestamp_millisecond(list_list)
+                    }
+                    data_type_proto::DataType::TimestampMicrosecond(_) => {
+                        time_list_list_builder_timestamp_microsecond(list_list)
+                    }
+                    data_type_proto::DataType::TimestampNanosecond(_) => {
+                        time_list_list_builder_timestamp_nanosecond(list_list)
                     }
                     _ => {
                         return Err(ArrowScalarError::Unimplemented(
@@ -3128,13 +3224,13 @@ impl table_list::ListList {
 }
 
 macro_rules! small_primitive_list_ingestor {
-    ($func_name:ident, $primitive_type:ty, $values_type:ident, $list_type:ident) => {
+    ($func_name:ident, $primitive_type:ty, $values_type:ident, $list_type:ident, list_size: $list_size:ident) => {
         fn $func_name(list: &table_list::ListList) -> ArrayRef {
             let primitive_list_builder = PrimitiveBuilder::<$primitive_type>::with_capacity(
                 list.values.iter().map(|l| l.len()).sum(),
             );
             let mut list_builder =
-                ListBuilder::with_capacity(primitive_list_builder, list.values.len());
+                $list_size::with_capacity(primitive_list_builder, list.values.len());
 
             for list in list.values.iter() {
                 if let Some(table_list::Values::$values_type(table_list::$list_type {
@@ -3184,6 +3280,383 @@ macro_rules! primitive_list_ingestor {
             Arc::new(list_builder.finish())
         }
     };
+}
+
+fn list_builder(data_type: &DataType) -> Box<dyn ArrayBuilder> {
+    match data_type {
+        DataType::Boolean => Box::new(BooleanBuilder::new()),
+        DataType::Int8 => Box::new(PrimitiveBuilder::<Int8Type>::new()),
+        DataType::Int16 => Box::new(PrimitiveBuilder::<Int16Type>::new()),
+        DataType::Int32 => Box::new(PrimitiveBuilder::<Int32Type>::new()),
+        DataType::Int64 => Box::new(PrimitiveBuilder::<Int64Type>::new()),
+        DataType::UInt8 => Box::new(PrimitiveBuilder::<UInt8Type>::new()),
+        DataType::UInt16 => Box::new(PrimitiveBuilder::<UInt16Type>::new()),
+        DataType::UInt32 => Box::new(PrimitiveBuilder::<UInt32Type>::new()),
+        DataType::UInt64 => Box::new(PrimitiveBuilder::<UInt64Type>::new()),
+        DataType::Float32 => Box::new(PrimitiveBuilder::<Float32Type>::new()),
+        DataType::Float64 => Box::new(PrimitiveBuilder::<Float64Type>::new()),
+        DataType::Utf8 => Box::new(StringBuilder::new()),
+        DataType::LargeUtf8 => Box::new(LargeStringBuilder::new()),
+        DataType::Date32 => Box::new(PrimitiveBuilder::<Date32Type>::new()),
+        DataType::Date64 => Box::new(PrimitiveBuilder::<Date64Type>::new()),
+        _ => unimplemented!(),
+    }
+}
+
+fn list_push(builder: &mut Box<dyn ArrayBuilder>, values: &table_list::Values) {
+    match values {
+        table_list::Values::Boolean(table_list::BooleanList { values, set }) => {
+            let builder = builder.as_any_mut().downcast_mut::<BooleanBuilder>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(*v);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::Int8(table_list::Int8List { values, set }) => {
+            let builder = builder.as_any_mut().downcast_mut::<PrimitiveBuilder<Int8Type>>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(*v as i8);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::Int16(table_list::Int16List { values, set }) => {
+            let builder = builder.as_any_mut().downcast_mut::<PrimitiveBuilder<Int16Type>>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(*v as i16);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::Int32(table_list::Int32List { values, set }) => {
+            let builder = builder.as_any_mut().downcast_mut::<PrimitiveBuilder<Int32Type>>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(*v);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::Int64(table_list::Int64List { values, set }) => {
+            let builder = builder.as_any_mut().downcast_mut::<PrimitiveBuilder<Int64Type>>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(*v);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::Uint8(table_list::UInt8List { values, set }) => {
+            let builder = builder.as_any_mut().downcast_mut::<PrimitiveBuilder<UInt8Type>>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(*v as u8);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::Uint16(table_list::UInt16List { values, set }) => {
+            let builder = builder.as_any_mut().downcast_mut::<PrimitiveBuilder<UInt16Type>>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(*v as u16);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::Uint32(table_list::UInt32List { values, set }) => {
+            let builder = builder.as_any_mut().downcast_mut::<PrimitiveBuilder<UInt32Type>>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(*v);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::Uint64(table_list::UInt64List { values, set }) => {
+            let builder = builder.as_any_mut().downcast_mut::<PrimitiveBuilder<UInt64Type>>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(*v);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::Float16(table_list::Float16List { values, set }) => {
+            let builder = builder.as_any_mut().downcast_mut::<PrimitiveBuilder<Float16Type>>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(f16::from_f32(*v));
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::Float32(table_list::Float32List { values, set }) => {
+            let builder = builder.as_any_mut().downcast_mut::<PrimitiveBuilder<Float32Type>>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(*v);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::Float64(table_list::Float64List { values, set }) => {
+            let builder = builder.as_any_mut().downcast_mut::<PrimitiveBuilder<Float64Type>>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(*v);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::Utf8(table_list::Utf8List { values, set }) => {
+            let builder = builder.as_any_mut().downcast_mut::<StringBuilder>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(v);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::LargeUtf8(table_list::Utf8List { values, set }) => {
+            let builder = builder.as_any_mut().downcast_mut::<LargeStringBuilder>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(v);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::Binary(table_list::BinaryList { values, set, size: _ }) => {
+            let builder = builder.as_any_mut().downcast_mut::<BinaryBuilder>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(v);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::LargeBinary(table_list::BinaryList { values, set, size: _ }) => {
+            let builder = builder.as_any_mut().downcast_mut::<LargeBinaryBuilder>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(v);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::FixedSizeBinary(table_list::BinaryList { values, set, size }) => {
+            let builder = builder.as_any_mut().downcast_mut::<FixedSizeBinaryBuilder>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(v);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::Boolean(table_list::BooleanList { values, set }) => {
+            let builder = builder.as_any_mut().downcast_mut::<BooleanBuilder>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(*v);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::Date32(table_list::Int32List { values, set }) => {
+            let builder = builder.as_any_mut().downcast_mut::<Date32Builder>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(*v);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::Date64(table_list::Int64List { values, set }) => {
+            let builder = builder.as_any_mut().downcast_mut::<Date64Builder>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(*v);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::Time32Second(table_list::Int32List { values, set }) => {
+            let builder = builder.as_any_mut().downcast_mut::<Time32SecondBuilder>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(*v);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::Time32Millisecond(table_list::Int32List { values, set }) => {
+            let builder = builder.as_any_mut().downcast_mut::<Time32MillisecondBuilder>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(*v);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::Time64Microsecond(table_list::Int64List { values, set }) => {
+            let builder = builder.as_any_mut().downcast_mut::<Time64MicrosecondBuilder>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(*v);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::Time64Nanosecond(table_list::Int64List { values, set }) => {
+            let builder = builder.as_any_mut().downcast_mut::<Time64NanosecondBuilder>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(*v);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::TimestampSecond(table_list::TimeList { times, set , tz: _}) => {
+            let builder = builder.as_any_mut().downcast_mut::<TimestampSecondBuilder>().unwrap();
+            times.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(*v);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::TimestampMillisecond(table_list::TimeList { times, set , tz: _}) => {
+            let builder = builder.as_any_mut().downcast_mut::<TimestampMillisecondBuilder>().unwrap();
+            times.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(*v);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::TimestampMicrosecond(table_list::TimeList { times, set , tz: _}) => {
+            let builder = builder.as_any_mut().downcast_mut::<TimestampMicrosecondBuilder>().unwrap();
+            times.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(*v);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::TimestampNanosecond(table_list::TimeList { times, set , tz: _}) => {
+            let builder = builder.as_any_mut().downcast_mut::<TimestampNanosecondBuilder>().unwrap();
+            times.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(*v);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::IntervalYearMonth(table_list::Int32List { values, set }) => {
+            let builder = builder.as_any_mut().downcast_mut::<IntervalYearMonthBuilder>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(*v);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::IntervalDayTime(table_list::Int64List { values, set }) => {
+            let builder = builder.as_any_mut().downcast_mut::<IntervalDayTimeBuilder>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(*v);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::DurationSecond(table_list::Int64List { values, set }) => {
+            let builder = builder.as_any_mut().downcast_mut::<DurationSecondBuilder>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(*v);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::DurationMillisecond(table_list::Int64List { values, set }) => {
+            let builder = builder.as_any_mut().downcast_mut::<DurationMillisecondBuilder>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(*v);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::DurationMicrosecond(table_list::Int64List { values, set }) => {
+            let builder = builder.as_any_mut().downcast_mut::<DurationMicrosecondBuilder>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(*v);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::DurationNanosecond(table_list::Int64List { values, set }) => {
+            let builder = builder.as_any_mut().downcast_mut::<DurationNanosecondBuilder>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    builder.append_value(*v);
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+        table_list::Values::List(table_list::ListList { values, set, list_type, size: _ }) => {
+            let builder = builder.as_any_mut().downcast_mut::<ListBuilder>().unwrap();
+            values.iter().zip(set.iter()).for_each(|(v, s)| {
+                if *s {
+                    let mut list_builder = builder.values();
+                    
+                } else {
+                    builder.append_null();
+                }
+            });
+        }
+    }
 }
 
 fn primitive_list_list_builder_float16(list: &table_list::ListList) -> ArrayRef {
@@ -3266,13 +3739,141 @@ primitive_list_ingestor!(
     Float64,
     Float64List
 );
+primitive_list_ingestor!(
+    primitive_list_list_builder_time32_second,
+    Time32SecondType,
+    Time32Second,
+    Int32List
+);
+primitive_list_ingestor!(
+    primitive_list_list_builder_time32_millisecond,
+    Time32MillisecondType,
+    Time32Millisecond,
+    Int32List
+);
+primitive_list_ingestor!(
+    primitive_list_list_builder_time64_microsecond,
+    Time64MicrosecondType,
+    Time64Microsecond,
+    Int64List
+);
+primitive_list_ingestor!(
+    primitive_list_list_builder_time64_nanosecond,
+    Time64NanosecondType,
+    Time64Nanosecond,
+    Int64List
+);
+primitive_list_ingestor!(
+    primitive_list_list_builder_date32,
+    Date32Type,
+    Date32,
+    Int32List
+);
+primitive_list_ingestor!(
+    primitive_list_list_builder_date64,
+    Date64Type,
+    Date64,
+    Int64List
+);
+primitive_list_ingestor!(
+    primitive_list_list_builder_interval_year_month,
+    IntervalYearMonthType,
+    IntervalYearMonth,
+    Int32List
+);
+primitive_list_ingestor!(
+    primitive_list_list_builder_interval_day_time,
+    IntervalDayTimeType,
+    IntervalDayTime,
+    Int64List
+);
+primitive_list_ingestor!(
+    primitive_list_list_builder_duration_second,
+    DurationSecondType,
+    DurationSecond,
+    Int64List
+);
+primitive_list_ingestor!(
+    primitive_list_list_builder_duration_millisecond,
+    DurationMillisecondType,
+    DurationMillisecond,
+    Int64List
+);
+primitive_list_ingestor!(
+    primitive_list_list_builder_duration_microsecond,
+    DurationMicrosecondType,
+    DurationMicrosecond,
+    Int64List
+);
+primitive_list_ingestor!(
+    primitive_list_list_builder_duration_nanosecond,
+    DurationNanosecondType,
+    DurationNanosecond,
+    Int64List
+);
+
+macro_rules! time_list_ingestor {
+    ($func_name:ident, $primitive_type:ty, $values_type:ident, $list_type:ident) => {
+        fn $func_name(list: &table_list::ListList) -> ArrayRef {
+            let primitive_list_builder = PrimitiveBuilder::<$primitive_type>::with_capacity(
+                list.values.iter().map(|l| l.len()).sum(),
+            );
+            let mut list_builder =
+                ListBuilder::with_capacity(primitive_list_builder, list.values.len());
+
+            for list in list.values.iter() {
+                if let Some(table_list::Values::$values_type(table_list::$list_type {
+                    times,
+                    tz,
+                    set,
+                })) = &list.values
+                {
+                    let primitive_list_builder = list_builder.values();
+                    primitive_list_builder.append_values(times.as_slice(), set.as_slice());
+                    list_builder.append(true);
+                } else {
+                    list_builder.append(false);
+                }
+            }
+            Arc::new(list_builder.finish())
+        }
+    };
+}
+
+time_list_ingestor!(
+    time_list_list_builder_timestamp_second,
+    TimestampSecondType,
+    TimestampSecond,
+    TimeList
+);
+
+time_list_ingestor!(
+    time_list_list_builder_timestamp_millisecond,
+    TimestampMillisecondType,
+    TimestampMillisecond,
+    TimeList
+);
+
+time_list_ingestor!(
+    time_list_list_builder_timestamp_microsecond,
+    TimestampMicrosecondType,
+    TimestampMicrosecond,
+    TimeList
+);
+
+time_list_ingestor!(
+    time_list_list_builder_timestamp_nanosecond,
+    TimestampNanosecondType,
+    TimestampNanosecond,
+    TimeList
+);
 
 #[cfg(test)]
 pub mod tests {
     use std::ops::Deref;
 
     use super::*;
-    use crate::table_list::Float16List;
+    use crate::table_list::{Float16List, ListList};
 
     macro_rules! primitive_list_test {
         ($func_name:ident, $prim_type:expr, $array_type:ty, $values_type:ident, $list_type:ident, $values:expr, $intended_values:expr, $set:expr) => {
@@ -3759,6 +4360,70 @@ pub mod tests {
         assert_eq!(intended_list, list);
         assert_eq!(
             as_primitive_array::<Float16Type>(&list.to_array().unwrap()),
+            &array
+        );
+    }
+
+    #[test]
+    fn test_list_list_test() {
+        let list = TableList {
+            values: Some(table_list::Values::Float32(table_list::Float32List {
+                values: vec![1.0, 2.0, 5.0, 3.0, 4.0],
+                set: vec![true, true, true, true, true],
+            })),
+        };
+        let intended_list = TableList {
+            values: Some(table_list::Values::List(ListList { 
+                values: vec![list.clone(), list.clone(), list.clone(), list.clone(), list.clone()], 
+                set: vec![true, true, true, true, true],
+                list_type: Some(FieldProto { name: "item".to_string(), data_type: Some(Box::new(DataTypeProto::from_arrow(&DataType::Float32))), nullable: true }),
+                size: None,
+            })),
+        };
+        let mut list_builder = ListBuilder::new(PrimitiveBuilder::<Float32Type>::new());
+        for _ in 0..5 {
+            list_builder.values().append_slice(&[1.0, 2.0, 5.0, 3.0, 4.0]);
+            list_builder.append(true);
+        }
+        
+        let array = list_builder.finish();
+        let list = array.clone_as_list().unwrap();
+        
+        assert_eq!(intended_list, list);
+        assert_eq!(
+            as_list_array(&list.to_array().unwrap()),
+            &array
+        );
+    }
+
+    #[test]
+    fn test_large_list_list_test() {
+        let list = TableList {
+            values: Some(table_list::Values::Float32(table_list::Float32List {
+                values: vec![1.0, 2.0, 5.0, 3.0, 4.0],
+                set: vec![true, true, true, true, true],
+            })),
+        };
+        let intended_list = TableList {
+            values: Some(table_list::Values::LargeList(ListList { 
+                values: vec![list.clone(), list.clone(), list.clone(), list.clone(), list.clone()], 
+                set: vec![true, true, true, true, true],
+                list_type: Some(FieldProto { name: "item".to_string(), data_type: Some(Box::new(DataTypeProto::from_arrow(&DataType::Float32))), nullable: true }),
+                size: None,
+            })),
+        };
+        let mut list_builder = LargeListBuilder::new(PrimitiveBuilder::<Float32Type>::new());
+        for _ in 0..5 {
+            list_builder.values().append_slice(&[1.0, 2.0, 5.0, 3.0, 4.0]);
+            list_builder.append(true);
+        }
+        
+        let array = list_builder.finish();
+        let list = array.clone_as_list().unwrap();
+        
+        assert_eq!(intended_list, list);
+        assert_eq!(
+            as_large_list_array(&list.to_array().unwrap()),
             &array
         );
     }
