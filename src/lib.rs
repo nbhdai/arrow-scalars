@@ -9,6 +9,7 @@ mod record_batch;
 pub use crate::record_batch::*;
 mod proto_types;
 pub use crate::proto_types::*;
+mod dict_array_builder;
 use thiserror::Error;
 
 #[derive(Error, Debug)]

@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::ScalarValuable;
+use crate::dict_array_builder::dict_builder;
 use crate::{
     data_type_proto, table_list, table_scalar, ArrowScalarError, DataTypeProto, FieldProto,
     TableList, TableScalar,
@@ -2597,11 +2598,46 @@ impl TableList {
                 }
                 Arc::new(builder.finish())
             }
-            table_list::Values::Dictionary(_) => {
-                return Err(ArrowScalarError::Unimplemented(
-                    "TableList::to_array",
-                    "Dictionary",
-                ));
+            table_list::Values::Dictionary(dictionary_list) => {
+                let key_type = if let Some(dict) = &dictionary_list.index_type {
+                    dict.to_arrow()?
+                } else {
+                    return Err(ArrowScalarError::InvalidProtobuf);
+                };
+                let values = if let Some(values) = &dictionary_list.values {
+                    values
+                } else {
+                    return Err(ArrowScalarError::InvalidProtobuf);
+                };
+                match key_type {
+                    DataType::Int8 => {
+                        dict_builder::<Int8Type>(&values)?
+                    }
+                    DataType::Int16 => {
+                        dict_builder::<Int16Type>(&values)?
+                    }
+                    DataType::Int32 => {
+                        dict_builder::<Int32Type>(&values)?
+                    }
+                    DataType::Int64 => {
+                        dict_builder::<Int64Type>(&values)?
+                    }
+                    DataType::UInt8 => {
+                        dict_builder::<UInt8Type>(&values)?
+                    }
+                    DataType::UInt16 => {
+                        dict_builder::<UInt16Type>(&values)?
+                    }
+                    DataType::UInt32 => {
+                        dict_builder::<UInt32Type>(&values)?
+                    }
+                    DataType::UInt64 => {
+                        dict_builder::<UInt64Type>(&values)?
+                    }
+                    _ => {
+                        return Err(ArrowScalarError::InvalidProtobuf);
+                    }
+                }
             }
             table_list::Values::Union(_) => {
                 return Err(ArrowScalarError::Unimplemented(
