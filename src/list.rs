@@ -2611,28 +2611,28 @@ impl TableList {
                 };
                 match key_type {
                     DataType::Int8 => {
-                        dict_builder::<Int8Type>(&values)?
+                        dict_builder::<Int8Type>(values)?
                     }
                     DataType::Int16 => {
-                        dict_builder::<Int16Type>(&values)?
+                        dict_builder::<Int16Type>(values)?
                     }
                     DataType::Int32 => {
-                        dict_builder::<Int32Type>(&values)?
+                        dict_builder::<Int32Type>(values)?
                     }
                     DataType::Int64 => {
-                        dict_builder::<Int64Type>(&values)?
+                        dict_builder::<Int64Type>(values)?
                     }
                     DataType::UInt8 => {
-                        dict_builder::<UInt8Type>(&values)?
+                        dict_builder::<UInt8Type>(values)?
                     }
                     DataType::UInt16 => {
-                        dict_builder::<UInt16Type>(&values)?
+                        dict_builder::<UInt16Type>(values)?
                     }
                     DataType::UInt32 => {
-                        dict_builder::<UInt32Type>(&values)?
+                        dict_builder::<UInt32Type>(values)?
                     }
                     DataType::UInt64 => {
-                        dict_builder::<UInt64Type>(&values)?
+                        dict_builder::<UInt64Type>(values)?
                     }
                     _ => {
                         return Err(ArrowScalarError::InvalidProtobuf);
@@ -4219,7 +4219,7 @@ pub mod tests {
                     list.clone(),
                     list.clone(),
                     list.clone(),
-                    list.clone(),
+                    list,
                 ],
                 set: vec![true, true, true, true, true],
                 list_type: Some(FieldProto {
@@ -4260,7 +4260,7 @@ pub mod tests {
                     list.clone(),
                     list.clone(),
                     list.clone(),
-                    list.clone(),
+                    list,
                 ],
                 set: vec![true, true, true, true, true],
                 list_type: Some(FieldProto {
@@ -4302,7 +4302,7 @@ pub mod tests {
                     list.clone(),
                     list.clone(),
                     list.clone(),
-                    list.clone(),
+                    list,
                 ],
                 set: vec![true, true, true, true, true],
                 list_type: Some(FieldProto {
