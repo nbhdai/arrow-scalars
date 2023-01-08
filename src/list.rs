@@ -2068,7 +2068,7 @@ impl TableList {
                     set.push(true);
                 }
                 table_list::Values::Date64(table_list::Int64List { values, set }) => {
-                    values.push(date.and_hms(0, 0, 0).timestamp_millis());
+                    values.push(date.and_hms_opt(0, 0, 0).unwrap().timestamp_millis());
                     set.push(true);
                 }
                 _ => return Err(date),
