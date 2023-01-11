@@ -1,12 +1,12 @@
 [package]
 name = "arrow_scalars"
-version = "0.3.7"
+version = "0.3.8"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-arrow = { version = "24.0", default-features = false, features = ["ipc"] }
+arrow = { version = "30.0", default-features = false, features = ["ipc"] }
 half = "2.2.1"
 tonic = { version = "0.8.3", default-features = false, features = ["codegen", "prost"] } 
 prost = { version = "0.11.5", default-features = false }
