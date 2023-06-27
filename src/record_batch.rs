@@ -154,6 +154,12 @@ impl Table {
             Err(self.roll_back(self.fields.len(), row))
         }
     }
+
+    pub fn clear(&mut self) {
+        for values in self.values.iter_mut() {
+            values.clear();
+        }
+    }
 }
 
 #[cfg(test)]

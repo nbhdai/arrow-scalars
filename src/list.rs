@@ -2993,6 +2993,181 @@ impl TableList {
             }
         }
     }
+
+    pub fn clear(&mut self) {
+        match self.values.as_mut() {
+            None => {}
+            Some(table_list::Values::Boolean(table_list::BooleanList { values, set })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::Int8(table_list::Int8List { values, set })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::Int16(table_list::Int16List { values, set })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::Int32(table_list::Int32List { values, set })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::Int64(table_list::Int64List { values, set })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::Uint8(table_list::UInt8List { values, set })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::Uint16(table_list::UInt16List { values, set })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::Uint32(table_list::UInt32List { values, set })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::Uint64(table_list::UInt64List { values, set })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::Float16(table_list::Float16List { values, set })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::Float32(table_list::Float32List { values, set })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::Float64(table_list::Float64List { values, set })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::Utf8(table_list::Utf8List { values, set })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::LargeUtf8(table_list::Utf8List { values, set })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::Binary(table_list::BinaryList { values, set, size: _ })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::LargeBinary(table_list::BinaryList { values, set, size: _ })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::FixedSizeBinary(table_list::BinaryList { values, set, size: _ })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::List(table_list::ListList { values, set, list_type: _, size: _ })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::LargeList(table_list::ListList { values, set, list_type: _, size: _ })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::FixedSizeList(table_list::ListList { values, set, list_type: _, size: _ })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::Struct(table_list::StructList { values, set, fields: _ })) => {
+                for value in values {
+                    value.clear();
+                }
+                set.clear();
+            }
+            Some(table_list::Values::Union(table_list::UnionList { values, set })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::Dictionary(dict)) => {
+                let table_list::DictionaryList {
+                    values,
+                    index_type: _,
+                } = dict.as_mut();
+                values.as_mut().map(|a| a.clear());
+            }
+            Some(table_list::Values::Date32(table_list::Int32List { values, set })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::Date64(table_list::Int64List { values, set })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::Time32Second(table_list::Int32List { values, set })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::Time32Millisecond(table_list::Int32List { values, set })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::Time64Microsecond(table_list::Int64List { values, set })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::Time64Nanosecond(table_list::Int64List { values, set })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::TimestampSecond(table_list::TimeList {times,
+                tz: _,
+                set})) => {
+                times.clear();
+                set.clear();
+            }
+            Some(table_list::Values::TimestampMillisecond(table_list::TimeList {times,
+                tz: _,
+                set})) => {
+                times.clear();
+                set.clear();
+            }
+            Some(table_list::Values::TimestampMicrosecond(table_list::TimeList {times,
+                tz: _,
+                set})) => {
+                times.clear();
+                set.clear();
+            }
+            Some(table_list::Values::TimestampNanosecond(table_list::TimeList {times,
+                tz: _,
+                set})) => {
+                times.clear();
+                set.clear();
+            }
+            Some(table_list::Values::IntervalYearMonth(table_list::Int32List { values, set })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::IntervalDayTime(table_list::Int64List { values, set })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::DurationSecond(table_list::Int64List { values, set })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::DurationMillisecond(table_list::Int64List { values, set })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::DurationMicrosecond(table_list::Int64List { values, set })) => {
+                values.clear();
+                set.clear();
+            }
+            Some(table_list::Values::DurationNanosecond(table_list::Int64List { values, set })) => {
+                values.clear();
+                set.clear();
+            }
+        }
+    }
 }
 
 impl table_list::ListList {
